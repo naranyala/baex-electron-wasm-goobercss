@@ -1,0 +1,29 @@
+{
+  "name": "zigwasm-electron-browserapiextended",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:electron": "vite build && electron . --no-sandbox",
+    "build:wasm": "zig build-exe -target wasm32-freestanding -O ReleaseFast -fno-entry -rdynamic -femit-bin=public/wasm/main.wasm wasm/main.zig",
+    "build": "tsc && vite build && electron-builder",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "autoprefixer": "^10.5.0",
+    "electron": "^30.0.1",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vite-plugin-electron": "^0.28.6",
+    "vite-plugin-electron-renderer": "^0.14.5"
+  },
+  "main": "dist-electron/main.js",
+  "dependencies": {
+    "koffi": "^3.0.2"
+  }
+}

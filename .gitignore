@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+release/
+
+# Build outputs
+dist/
+dist-electron/
+zig-out/
+.zig-cache/
+
+# Generated Wasm binaries
+*.wasm
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Bun
+# Keep bun.lockb as it is the source of truth for dependencies
