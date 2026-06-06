@@ -9,7 +9,11 @@
   },
   "files": [
     "dist",
-    "dist-electron"
+    "dist-electron",
+    "native"
+  ],
+  "asarUnpack": [
+    "native/**/*"
   ],
   "mac": {
     "target": [
