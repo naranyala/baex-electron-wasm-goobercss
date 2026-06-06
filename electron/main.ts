@@ -1,21 +1,21 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import koffi from 'koffi'
+// import koffi from 'koffi'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // --- Zig Backend Engine Integration ---
-const LIB_PATH = path.join(process.cwd(), 'native', 'libengine.so');
-const lib = koffi.load(LIB_PATH);
+// const LIB_PATH = path.join(process.cwd(), 'native', 'libengine.so');
+// const lib = koffi.load(LIB_PATH);
+//
+// const engineAdd = lib.func('int engine_add(int a, int b)');
+// const engineMultiply = lib.func('int engine_multiply(int a, int b)');
+// const engineGetVersion = lib.func('const char* engine_get_version()');
 
-const engineAdd = lib.func('int engine_add(int a, int b)');
-const engineMultiply = lib.func('int engine_multiply(int a, int b)');
-const engineGetVersion = lib.func('const char* engine_get_version()');
-
-ipcMain.handle('zig-engine:add', (_, args: [number, number]) => engineAdd(...args));
-ipcMain.handle('zig-engine:multiply', (_, args: [number, number]) => engineMultiply(...args));
-ipcMain.handle('zig-engine:version', () => engineGetVersion());
+ipcMain.handle('zig-engine:add', (_, args: [number, number]) => args[0] + args[1]);
+ipcMain.handle('zig-engine:multiply', (_, args: [number, number]) => args[0] * args[1]);
+ipcMain.handle('zig-engine:version', () => '0.0.0-stub');
 // ---------------------------------------
 
 // The built directory structure

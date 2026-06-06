@@ -1,4 +1,5 @@
 const std = @import("std");
+const math = @import("math.zig");
 
 var heap_ptr: usize = 0;
 const HEAP_SIZE = 65536;
@@ -31,9 +32,13 @@ export fn extended_greet(name_ptr: [*]u8, name_len: i32) void {
     free(out_ptr, total_len);
 }
 
-// --- Existing Utilities ---
+// --- Exported Math Functions ---
 
-export fn add(a: i32, b: i32) i32 { return a + b; }
+export fn add(a: i32, b: i32) i32 { return math.add(a, b); }
+export fn factorial(n: i32) i32 { return math.factorial(n); }
+export fn gcd(a: i32, b: i32) i32 { return math.gcd(a, b); }
+export fn isPrime(n: i32) i32 { return math.isPrime(n); }
+export fn fibonacci(n: i32) i32 { return math.fibonacci(n); }
 
 export fn alloc(len: usize) [*]u8 {
     if (heap_ptr + len > HEAP_SIZE) @panic("Out of memory");
