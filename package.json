@@ -6,10 +6,9 @@
   "scripts": {
     "dev": "vite",
     "dev:electron": "vite build && electron . --no-sandbox",
-    "build:wasm": "cd wasm-rust && wasm-pack build --target web",
+    "build:wasm": "cd core/rust && wasm-pack build --target web",
     "build": "tsc && vite build && electron-builder",
     "preview": "vite preview",
-    "test:wasm": "zig test wasm/math.zig",
     "test:frontend": "vitest run"
   },
   "devDependencies": {

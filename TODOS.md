@@ -28,6 +28,5 @@ Tracking the evolution of the BAEX framework.
 - [ ] Optimize WASM memory growth and heap management.
 
 ## Testing & Quality
-- [ ] Expand `wasm/math.zig` tests to cover edge cases.
 - [ ] Increase frontend coverage in `src/main.test.ts`.
 - [ ] Implement integration tests for the `WasmBridge`.

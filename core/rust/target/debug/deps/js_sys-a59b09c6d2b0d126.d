@@ -1,0 +1,10 @@
+/media/naranyala/Data/projects-remote/browserapiextended-electron-wasm-goobercss/wasm-rust/target/debug/deps/js_sys-a59b09c6d2b0d126.d: /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/lib.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/mod.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/queue.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/task/singlethread.rs
+
+/media/naranyala/Data/projects-remote/browserapiextended-electron-wasm-goobercss/wasm-rust/target/debug/deps/libjs_sys-a59b09c6d2b0d126.rlib: /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/lib.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/mod.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/queue.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/task/singlethread.rs
+
+/media/naranyala/Data/projects-remote/browserapiextended-electron-wasm-goobercss/wasm-rust/target/debug/deps/libjs_sys-a59b09c6d2b0d126.rmeta: /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/lib.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/mod.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/queue.rs /home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/task/singlethread.rs
+
+/home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/lib.rs:
+/home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/mod.rs:
+/home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/queue.rs:
+/home/naranyala/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.99/src/futures/task/singlethread.rs:

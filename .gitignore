@@ -11,8 +11,6 @@ release/
 # Build outputs
 dist/
 dist-electron/
-zig-out/
-.zig-cache/
 
 # Generated Wasm binaries
 *.wasm
