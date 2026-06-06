@@ -2,6 +2,7 @@
 node_modules/
 .pnpm-store/
 
+core/rust/target/
 
 wasm-rust/target/
 thirdparty/
