@@ -1,6 +1,6 @@
 # Rust-WASM Electron Framework (BAEX)
 
-![bee-holding-axe](./bee-holding-axe.png)
+![bee-holding-axe](./bee-holding-axe.jpg)
 
 A high-performance desktop application integrating **Rust WASM**, **Electron**, and **Web Components**. This project serves as a playground and a foundation for the **BAEX** (Browser API Extended) framework.
 
