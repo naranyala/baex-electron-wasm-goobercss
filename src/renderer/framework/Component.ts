@@ -1,47 +1,37 @@
 import { createReactiveState } from './ReactiveState';
+import { BaseComponent } from './BaseComponent';
+import { ComponentDefinition } from './types';
 
-interface ComponentConfig<S extends object> {
-  name: string;
-  initialState: S;
-  render: (state: S, helpers: { setState: (update: (s: S) => S) => void }) => string;
-  mounted?: (el: HTMLElement, state: S) => void;
-}
+export function defineComponent<S extends object>(config: ComponentDefinition & { initialState: S }) {
+  const { name, initialState, render, mounted } = config;
 
-export function defineComponent<S extends object>({ name, initialState, render, mounted }: ComponentConfig<S>) {
-  customElements.define(name, class extends HTMLElement {
-    private state: S;
-    private shadow: ShadowRoot;
+  customElements.define(name, class extends BaseComponent {
+    public state: S;
 
     constructor() {
-      super();
-      this.shadow = this.attachShadow({ mode: 'open' });
-      
-      // Create reactive state that triggers this.update()
+      super(config);
+      // Use the reactive state to trigger the parent's update()
       this.state = createReactiveState(initialState, () => this.update());
+      this._state = this.state;
     }
 
-    connectedCallback() {
-      this.update();
-      if (mounted) {
-        mounted(this, this.state);
-      }
-    }
-
-    update() {
+    render() {
       const helpers = {
         setState: (updateFn: (s: S) => S) => {
           const newState = updateFn(this.state);
           Object.assign(this.state, newState);
         }
       };
-      
-      const html = render(this.state, helpers);
-      if (this.shadow.innerHTML !== html) {
-        this.shadow.innerHTML = html;
-        if (mounted) {
-          mounted(this, this.state);
-        }
+      return render(this.state, helpers);
+    }
+
+    connectedCallback() {
+      super.connectedCallback();
+      if (mounted) {
+        mounted(this as any, this.state);
       }
     }
   });
+
+  return config;
 }

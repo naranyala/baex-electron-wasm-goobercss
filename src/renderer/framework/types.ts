@@ -1,3 +1,11 @@
+export interface ComponentDefinition {
+  name: string;
+  render: (state: any, helpers: any) => string;
+  mounted?: (el: any, state: any) => void;
+  autoUpdate?: boolean;
+  events?: Record<string, (e: Event, state: any) => void | Promise<void>>;
+}
+
 export interface IRCommand<T = any> {
   type: string;
   payload: T;

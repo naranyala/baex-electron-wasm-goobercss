@@ -42,7 +42,7 @@ export class TodoList extends BaseComponent {
   state = createReactiveState({ items: [] as string[] }, () => this.update());
 
   render() {
-    this.shadow.innerHTML = `
+    return `
       <style>${styles}</style>
       <div class="container">
         <h3>BAEX Todos</h3>
@@ -60,10 +60,17 @@ export class TodoList extends BaseComponent {
         </ul>
       </div>
     `;
+  }
 
+  connectedCallback() {
+    super.connectedCallback();
+    this.setupListeners();
+  }
+
+  setupListeners() {
     const input = this.shadow.getElementById('todo-input') as HTMLInputElement;
     this.shadow.getElementById('add-btn')?.addEventListener('click', () => {
-      if (input.value) {
+      if (input && input.value) {
         this.state.items = [...this.state.items, input.value];
         input.value = '';
       }

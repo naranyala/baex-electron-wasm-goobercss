@@ -132,7 +132,9 @@ ipcMain.handle('db:query', (_, sql: string) => {
 let win: BrowserWindow | null
 
 function createWindow() {
+  const projectName = path.basename(process.env.APP_ROOT);
   win = new BrowserWindow({
+    title: projectName,
     icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),

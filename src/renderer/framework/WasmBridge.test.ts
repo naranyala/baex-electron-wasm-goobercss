@@ -1,12 +1,30 @@
 import { describe, it, expect, vi } from 'vitest';
-import { WasmBridge } from './WasmBridge';
-import * as wasm from '../../../core/rust/pkg/wasm_rust.js';
+
+class MockWorker {
+  onmessage: ((e: MessageEvent) => void) | null = null;
+  postMessage = vi.fn((msg: any) => {
+    setTimeout(() => {
+      if (this.onmessage) {
+        this.onmessage({
+          data: { id: msg.id, result: { type: 'Number', payload: 30 }, status: 'success' }
+        } as any);
+      }
+    }, 0);
+  });
+  terminate = vi.fn();
+}
+
+vi.stubGlobal('Worker', MockWorker);
 
 // Mock the wasm module
 vi.mock('../../../core/rust/pkg/wasm_rust.js', () => ({
   process_ir: vi.fn(),
   default: vi.fn()
 }));
+
+// Import WasmBridge AFTER the mock
+import { WasmBridge } from './WasmBridge';
+import * as wasm from '../../../core/rust/pkg/wasm_rust.js';
 
 describe('WasmBridge', () => {
   it('should call process_ir with correct JSON for Add', async () => {

@@ -15,7 +15,7 @@ const styles = css`
 
 export class BasicComponent extends BaseComponent {
   render() {
-    this.shadow.innerHTML = `
+    return `
       <style>${styles}</style>
       <div class="card">
         <h1>Hello BAEX!</h1>

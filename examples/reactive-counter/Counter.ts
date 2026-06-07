@@ -29,7 +29,7 @@ export class ReactiveCounter extends BaseComponent {
   state = createReactiveState({ count: 0 }, () => this.update());
 
   render() {
-    this.shadow.innerHTML = `
+    return `
       <style>${styles}</style>
       <div class="counter">
         <div class="count">${this.state.count}</div>
@@ -37,7 +37,10 @@ export class ReactiveCounter extends BaseComponent {
         <button id="dec">Decrement</button>
       </div>
     `;
+  }
 
+  connectedCallback() {
+    super.connectedCallback();
     this.shadow.getElementById('inc')?.addEventListener('click', () => this.state.count++);
     this.shadow.getElementById('dec')?.addEventListener('click', () => this.state.count--);
   }

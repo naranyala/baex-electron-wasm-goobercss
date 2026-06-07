@@ -15,7 +15,7 @@ const styles = css`
 
 export class WasmDemo extends BaseComponent {
   render() {
-    this.shadow.innerHTML = `
+    return `
       <style>${styles}</style>
       <div class="wasm-card">
         <h3>WASM Integration</h3>
@@ -23,7 +23,10 @@ export class WasmDemo extends BaseComponent {
         <div id="result" class="result">Click to compute...</div>
       </div>
     `;
+  }
 
+  connectedCallback() {
+    super.connectedCallback();
     this.shadow.getElementById('run')?.addEventListener('click', async () => {
       console.log('[WasmDemo] Clicked!');
       const res = await WasmBridge.compute.fibonacci(10);

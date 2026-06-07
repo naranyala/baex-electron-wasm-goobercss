@@ -36,7 +36,7 @@ export class AsyncLoader extends BaseComponent {
   }
 
   render() {
-    this.shadow.innerHTML = `
+    return `
       <style>${styles}</style>
       <div class="loader">
         ${this.state.loading 
@@ -48,7 +48,10 @@ export class AsyncLoader extends BaseComponent {
         </button>
       </div>
     `;
+  }
 
+  connectedCallback() {
+    super.connectedCallback();
     this.shadow.getElementById('fetch-btn')?.addEventListener('click', () => this.fetchData());
   }
 }

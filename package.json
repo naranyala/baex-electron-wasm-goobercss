@@ -24,9 +24,11 @@
   },
   "main": "dist-electron/main.js",
   "dependencies": {
+    "@sqlite.org/sqlite-wasm": "^3.53.0-build1",
     "clsx": "^2.1.1",
     "goober": "^2.1.19",
     "leaflet": "^1.9.4",
+    "sql.js": "^1.11.0",
     "vega": "^6.2.0",
     "vega-embed": "^7.1.0",
     "vega-lite": "^6.4.3",

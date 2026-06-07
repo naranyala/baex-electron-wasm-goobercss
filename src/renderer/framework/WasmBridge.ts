@@ -1,22 +1,20 @@
-import { process_ir } from '../../../core/rust/pkg/wasm_rust.js';
-import { IRCommand, IRResult, BridgeInterface } from './types';
+import { workerBridge } from './WorkerBridge';
+import { IRResult, BridgeInterface } from './types';
 
 async function bridgeRaw(type: string, payload: any): Promise<any> {
-    const command: IRCommand = { type, payload };
-    const commandJson = JSON.stringify(command);
-    
-    console.debug(`[BAEX Bridge] Sending: ${commandJson}`);
-    
-    const rawResult: IRResult = await process_ir(commandJson);
-    
-    console.debug(`[BAEX Bridge] Received:`, rawResult);
-    
-    if (rawResult.type === 'Error') {
-        console.error(`[BAEX Bridge] Anomaly: ${rawResult.payload}`);
-        throw new Error(rawResult.payload as string);
+    try {
+        const rawResult: IRResult = await workerBridge.execute(type, payload);
+        
+        if (rawResult.type === 'Error') {
+            console.error(`[BAEX Bridge] Anomaly: ${rawResult.payload}`);
+            throw new Error(rawResult.payload as string);
+        }
+        
+        return rawResult.payload;
+    } catch (e: any) {
+        console.error(`[BAEX Bridge] Worker Error: ${e.message}`);
+        throw e;
     }
-    
-    return rawResult.payload;
 }
 
 export const WasmBridge: BridgeInterface = {

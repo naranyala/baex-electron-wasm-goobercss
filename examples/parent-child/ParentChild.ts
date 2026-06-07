@@ -19,13 +19,17 @@ const styles = css`
 
 class ChildComponent extends BaseComponent {
   render() {
-    this.shadow.innerHTML = `
+    return `
       <style>${styles}</style>
       <div class="child">
         I am the child. I can emit events!
         <button id="msg-btn">Send Message to Parent</button>
       </div>
     `;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
     this.shadow.getElementById('msg-btn')?.addEventListener('click', () => {
       this.dispatchEvent(new CustomEvent('child-message', {
         detail: 'Hello from Child!',
@@ -40,7 +44,7 @@ export class ParentComponent extends BaseComponent {
   message = 'No message yet';
 
   render() {
-    this.shadow.innerHTML = `
+    return `
       <style>${styles}</style>
       <div class="parent">
         <h3>Parent Component</h3>
@@ -48,7 +52,10 @@ export class ParentComponent extends BaseComponent {
         <baex-child></baex-child>
       </div>
     `;
+  }
 
+  connectedCallback() {
+    super.connectedCallback();
     this.shadow.addEventListener('child-message', (e: any) => {
       this.message = e.detail;
       this.update();

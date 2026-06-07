@@ -12,11 +12,24 @@ The goal is to create a seamless, type-safe, and reactive bridge between low-lev
 
 We are evolving a custom framework that minimizes boilerplate and maximizes the synergy between WASM and the DOM.
 
-### Architectural Boundaries
+### The Layered Architecture
 
-- **WASM Layer (The Brain):** Handles heavy computation, complex state transitions, and native system interop. Written in Rust.
-- **Bridge Layer (The Nerve):** A transparent proxy that manages memory and maps WASM exports to JavaScript calls.
-- **View Layer (The Face):** Standard-compliant Custom Elements, styled with goober (CSS-in-JS), that react to state changes and render UI efficiently.
+BAEX is designed as a multi-layered pipeline to eliminate the "impedance mismatch" between high-performance Rust and the flexible Web DOM.
+
+- **WASM Layer (The Brain)**: Written in Rust, compiled to `wasm32-unknown-unknown`. It implements a custom Binary Bytecode Executor. Instead of calling a myriad of small WASM functions, BAEX sends compact IR (Intermediate Representation) commands to reduce boundary-crossing overhead.
+- **Bridge Layer (The Nerve)**: A transparent proxy and Worker Orchestrator. All WASM execution is offloaded to a `WasmWorker` via the `WorkerBridge` to ensure the UI thread never blocks.
+- **Reactivity Layer (The Pulse)**: A fine-grained system using `createSignal` and `createEffect`. It allows for targeted DOM updates (via `bindSignal`) bypassing the need for full-component re-renders.
+- **View Layer (The Face)**: Standard-compliant Custom Elements extending `BaseComponent`, styled with `goober` (CSS-in-JS).
+
+### How it Works: The Request Lifecycle
+
+To understand BAEX, follow the path of a single user interaction:
+
+1.  **The Trigger**: A user interacts with a `BaseComponent`. The component calls a method on the `WasmBridge` (e.g., `WasmBridge.compute.fibonacci(10)`).
+2.  **The Dispatch**: The Bridge creates an **IR command**, serializes it into an `ArrayBuffer`, and sends it via `postMessage` to the `WasmWorker`.
+3.  **The Execution**: The `WasmWorker` decodes the buffer and passes the IR string to the Rust function `process_ir`, which executes the native logic.
+4.  **The Reactive Loop**: The result flows back to the component, which updates a **Signal**.
+5.  **The Atomic Update**: The state change triggers a targeted update in the DOM, reflecting the result instantly.
 
 ### Core Principles
 
@@ -27,24 +40,31 @@ We are evolving a custom framework that minimizes boilerplate and maximizes the 
 ## Tech Stack
 
 - **Languages:** Rust (WASM), TypeScript
-- **Runtime:** Electron
+- **Runtime:** Electron / Browser
 - **Build Tool:** Vite
 - **UI:** Web Components (Custom Elements), goober (CSS-in-JS), clsx
+- **Storage:** SQLite (Frontend WASM / Backend Native)
 
 ## Features
 
-- **Rust-WASM Integration:** High-performance mathematical functions and browser interop (console logging, document manipulation).
-- **Custom Web Components:** Tab-bar and other components built using native Web Component standards.
-- **CSS-in-JS Styling:** Modular, component-based styling using goober.
-- **Intelligent Search:** Fuzzy search implementation for navigating feature modules.
-- **Dynamic Module Loader:** WASM-powered engine capable of extending browser capabilities.
+- **Hybrid SQLite Integration:** Dual-mode SQLite engine. Native napi-rs for Electron main process and official WASM build for the renderer/browser.
+- **WASM-based Compiler API:** A binary bytecode pipeline that compiles JSON-IR scripts into compact binary formats for optimized execution.
+- **Orchestration Primitives:**
+    - **Worker Orchestrator**: Offloads WASM computation to separate threads.
+    - **Service Registry**: Centralized dependency injection for shared services.
+    - **Event Bus**: Decoupled pub/sub communication.
+    - **Custom Router**: Path-to-component mapping and history management.
+- **Custom Web Components**: Tab-bar and other components built using native Web Component standards.
+- **CSS-in-JS Styling**: Modular, component-based styling using goober.
+- **Intelligent Search**: Fuzzy search implementation for navigating feature modules.
 
 ## Roadmap
 
-- **WASM Component Lifecycle Hooks:** Native integration to link WASM module lifecycle with Web Component lifecycle methods.
-- **Advanced State Management:** WASM-driven global state management for reactive UI updates across complex component trees.
-- **Serialization Bridge:** Automated, high-performance data serialization between Rust/WASM and JavaScript.
-- **Theme Engine:** Dynamic, WASM-driven theme switching via goober.
+- **Fine-Grained Reactivity**: Transition from proxy-based `innerHTML` updates to a Signal-based rendering system.
+- **OPFS Persistence**: Integrate Origin Private File System for high-performance, persistent SQLite storage in the browser.
+- **Zero-Copy Bridge**: Implement `SharedArrayBuffer` for zero-copy data transfer between JS and WASM Workers.
+- **Advanced State Management**: WASM-driven global state management for reactive UI updates across complex component trees.
+- **Theme Engine**: Dynamic, WASM-driven theme switching via goober.
 
 ## Development
 
