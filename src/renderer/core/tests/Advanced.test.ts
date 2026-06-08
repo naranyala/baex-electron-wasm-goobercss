@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { compiler } from '../framework/Compiler';
+import { compiler } from '../bridge/Compiler';
 
-vi.mock('../../core/rust/pkg/wasm_rust.js', () => ({
+vi.mock('../../../core/rust/pkg/wasm_rust.js', () => ({
   default: vi.fn(),
   compile_ir: vi.fn(() => new Uint8Array([0x01, 0x00, 0x00, 0x00])),
   execute_bytecode: vi.fn(() => 0),
