@@ -1,5 +1,5 @@
-import { services } from '../framework/ServiceRegistry';
-import { eventBus } from '../framework/EventBus';
+import { services } from '../routing/ServiceRegistry';
+import { eventBus } from '../routing/EventBus';
 import { describe, it, expect, vi } from 'vitest';
 
 describe('Core Infrastructure', () => {

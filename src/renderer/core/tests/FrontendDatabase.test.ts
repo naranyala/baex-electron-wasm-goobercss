@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { FrontendDatabase } from './FrontendDatabase';
+import { FrontendDatabase } from '../db/FrontendDatabase';
 
 // Mocking the sql.js module
 vi.mock('https://cdn.jsdelivr.net/npm/@sqlite.org/sqlite-wasm@3.53.0-build1/sqlite-wasm/jswasm/sqlite3.mjs', () => {

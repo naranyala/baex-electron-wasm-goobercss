@@ -23,7 +23,7 @@ vi.mock('../../../core/rust/pkg/wasm_rust.js', () => ({
 }));
 
 // Import WasmBridge AFTER the mock
-import { WasmBridge } from './WasmBridge';
+import { WasmBridge } from '../bridge/WasmBridge';
 import * as wasm from '../../../core/rust/pkg/wasm_rust.js';
 
 describe('WasmBridge', () => {

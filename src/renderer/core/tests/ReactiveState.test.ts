@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createReactiveState } from './ReactiveState';
+import { createReactiveState } from '../reactivity/ReactiveState';
 
 describe('ReactiveState', () => {
   it('should call onMutation when state changes', () => {
