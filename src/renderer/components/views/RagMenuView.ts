@@ -1,11 +1,10 @@
-import { defineComponent } from '../framework/Component.js';
-import { theme, menuItem, menuGrid } from '../styles/theme.js';
-export const RagMenuView = defineComponent({
+import { theme, menuItem, menuGrid } from '../../styles/theme.ts';
+export const RagMenuView = {
     name: 'rag-menu-view',
     initialState: {
         activeCategory: 'Ingestion'
     },
-    render: (state) => {
+    render: (_state: any) => {
         const categories = {
             'Ingestion': [
                 { id: 'loader', label: 'Data Loader', icon: '📥' },
@@ -36,8 +35,8 @@ export const RagMenuView = defineComponent({
             <div class="${menuGrid}">
               ${items.map(item => `
                 <div class="${menuItem}" data-rag-id="${item.id}" data-category="${catName}">
-                  <div style="font-size: 1.25rem; line-height: 1;">${item.icon}</div>
-                  <div style="margin-top: 0.125rem; font-size: 0.75rem;">${item.label}</div>
+                  <div style="font-size: 1.75rem; line-height: 1;">${item.icon}</div>
+                  <div style="margin-top: 0.375rem; font-size: 0.875rem;">${item.label}</div>
                 </div>
               `).join('')}
             </div>
@@ -46,14 +45,14 @@ export const RagMenuView = defineComponent({
       </div>
     `;
     },
-    mounted: (el) => {
-        el.addEventListener('click', (e) => {
-            const target = e.target;
-            const id = target.closest('[data-rag-id]')?.getAttribute('data-rag-id');
+    mounted: (el: any) => {
+        el.addEventListener('click', (e: Event) => {
+            const target = e.target as HTMLElement | null;
+            const id = target?.closest('[data-rag-id]')?.getAttribute('data-rag-id');
             if (id) {
                 console.log(`RAG Module Selected: ${id}`);
                 // In a real app, this would navigate to the specific module view
             }
         });
     }
-});
+};

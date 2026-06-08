@@ -1,6 +1,6 @@
 export interface ComponentDefinition {
-  name: string;
-  render: (state: any, helpers: any) => string;
+  name?: string;
+  render?: (state: any, helpers: any) => string;
   mounted?: (el: any, state: any) => void;
   autoUpdate?: boolean;
   events?: Record<string, (e: Event, state: any) => void | Promise<void>>;

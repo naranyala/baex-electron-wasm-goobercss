@@ -1,15 +1,14 @@
 import './style.css'
 import { css, setup } from 'goober';
-import { WasmBridge } from './framework/WasmBridge.js';
-import { defineComponent } from './framework/Component.js';
-import { getDatabase } from './framework/FrontendDatabase.js';
-import { services } from './framework/ServiceRegistry.js';
-import { router } from './framework/Router.js';
-import { compiler } from './framework/Compiler.js';
+import { WasmBridge } from './core/bridge/WasmBridge.js';
+import { defineComponent } from './core/ui/Component.js';
+import { getDatabase } from './core/db/FrontendDatabase.js';
+import { services } from './core/routing/ServiceRegistry.js';
+import { router } from './core/routing/Router.js';
+import { compiler } from './core/bridge/Compiler.js';
 import { 
   navBar, 
-  brandMark, 
-  homeButton, 
+  brandHome, 
   appContainer, 
   contentWrapper, 
   searchBar, 
@@ -21,13 +20,15 @@ import {
   statusDot, 
   statusDivider,
   menuItem
-} from './styles/theme.js';
+} from './styles/theme.ts';
 import { tabs, activeTabId } from './state/appState.js';
 import { dbService } from './services/DbService.js';
-import { MapView } from './components/MapView.js';
-import { ChartView } from './components/ChartView.js';
-import { TableView } from './components/TableView.js';
-import { RagMenuView } from './components/RagMenuView.js';
+import { MapView } from './components/views/MapView.js';
+import { ChartView } from './components/views/ChartView.js';
+import { TableView } from './components/views/TableView.js';
+import { RagMenuView } from './components/views/RagMenuView.ts';
+import { TabManager } from './core/routing/TabManager.ts';
+import './components/tab-bar.ts';
 import 'leaflet/dist/leaflet.css';
 
 setup(null);
@@ -49,6 +50,17 @@ async function fetchTables() {
   }
 }
 
+const viewCache = new Map<string, HTMLElement>();
+
+function showView(tabId: string | null) {
+  const container = document.getElementById('dynamic-view');
+  if (!container) return;
+  viewCache.forEach((el, id) => {
+    el.style.display = id === tabId ? '' : 'none';
+  });
+  container.style.display = tabId ? 'block' : 'none';
+}
+
 function renderTabBar() {
   const tabBar = document.querySelector('tab-bar') as any;
   if (!tabBar) return;
@@ -59,53 +71,41 @@ function renderTabBar() {
   tabBar.style.display = tabList.length > 0 ? 'flex' : 'none';
 }
 
-async function renderTableContent(tableName: string) {
-  const view = document.getElementById('dynamic-view');
-  if (!view) return;
-  view.style.display = 'block';
-  
-  const tableEl = document.createElement('table-view');
-  const state = (tableEl as any).state;
-  state.tableName = tableName;
-  state.loading = true;
-  
-  view.innerHTML = '';
-  view.appendChild(tableEl);
-  
-  try {
-    state.data = await dbService.getTableData(tableName);
-    state.loading = false;
-  } catch (e: any) {
-    state.error = e.message || e;
-    state.loading = false;
+function openTab(tabId: string, label: string, createView: () => HTMLElement) {
+  const currentTabs = tabs.get();
+  if (!currentTabs.has(tabId)) {
+    currentTabs.set(tabId, { label });
+    const viewEl = createView();
+    viewEl.style.display = 'none';
+    viewCache.set(tabId, viewEl);
+    document.getElementById('dynamic-view')?.appendChild(viewEl);
   }
+  activeTabId.set(tabId);
+  document.getElementById('home-view')!.style.display = 'none';
+  showView(tabId);
+  renderTabBar();
+  TabManager.save(currentTabs);
 }
 
-async function renderChartContent() {
-  const view = document.getElementById('dynamic-view');
-  if (!view) return;
-  view.style.display = 'block';
-  const chartEl = document.createElement('chart-view');
-  view.innerHTML = '';
-  view.appendChild(chartEl);
-}
-
-async function renderMapContent() {
-  const view = document.getElementById('dynamic-view');
-  if (!view) return;
-  view.style.display = 'block';
-  const mapEl = document.createElement('map-view');
-  view.innerHTML = '';
-  view.appendChild(mapEl);
-}
-
-async function renderRagMenu() {
-  const view = document.getElementById('dynamic-view');
-  if (!view) return;
-  view.style.display = 'block';
-  const ragEl = document.createElement('rag-menu-view');
-  view.innerHTML = '';
-  view.appendChild(ragEl);
+function removeTab(tabId: string) {
+  const currentTabs = tabs.get();
+  currentTabs.delete(tabId);
+  const el = viewCache.get(tabId);
+  if (el) el.remove();
+  viewCache.delete(tabId);
+  if (currentTabs.size === 0) {
+    activeTabId.set(null);
+    document.getElementById('home-view')!.style.display = 'block';
+    showView(null);
+  } else {
+    const remaining = Array.from(currentTabs.keys());
+    const idx = remaining.indexOf(tabId);
+    const nextId = remaining[Math.max(0, Math.min(idx, remaining.length - 1))];
+    activeTabId.set(nextId);
+    showView(nextId);
+  }
+  renderTabBar();
+  TabManager.save(currentTabs);
 }
 
 export function fuzzySearch(query: string, items: any[]) {
@@ -270,8 +270,7 @@ async function initApp() {
   
   app.innerHTML = 
     '<div class="' + navBar + '">' +
-      '<div class="' + brandMark + '"><span>BAEX</span></div>' +
-      '<button class="' + homeButton + '" id="home-btn">⌂ Home</button>' +
+      '<div class="' + brandHome + '" id="home-btn"><span>BAEX</span> ⌂</div>' +
       '<tab-bar id="main-tab-bar" style="flex: 1;"></tab-bar>' +
     '</div>' +
     '<div class="' + appContainer + '"><div class="' + contentWrapper + '">' +
@@ -315,25 +314,59 @@ async function initApp() {
     router.navigate('/');
     activeTabId.set(null);
     tabs.get().clear();
-    (document.getElementById('home-view') as HTMLElement).style.display = 'block';
-    (document.getElementById('dynamic-view') as HTMLElement).style.display = 'none';
+    viewCache.forEach(el => el.remove());
+    viewCache.clear();
+    document.getElementById('home-view')!.style.display = 'block';
+    showView(null);
     renderTabBar();
+    TabManager.clear();
   });
 
   const tabBar = document.getElementById('main-tab-bar');
   tabBar?.addEventListener('tab-selected', (e: any) => {
     const tabId = e.detail;
+    document.getElementById('home-view')!.style.display = 'none';
+    showView(tabId);
     activeTabId.set(tabId);
-    const homeView = document.getElementById('home-view') as HTMLElement;
-    const dynamicView = document.getElementById('dynamic-view') as HTMLElement;
-    if (homeView) homeView.style.display = 'none';
-    if (dynamicView) dynamicView.style.display = 'block';
-    
-    const currentTabs = tabs.get();
-    const tab = currentTabs.get(tabId);
-    if (tab) tab.action();
     renderTabBar();
   });
+  tabBar?.addEventListener('tab-close', (e: any) => {
+    removeTab(e.detail);
+  });
+
+  // Restore persisted tabs
+  const storedTabs = TabManager.load();
+  storedTabs.forEach(({ id, label }) => {
+    let el: HTMLElement | null = null;
+    if (id.startsWith('table-')) {
+      const tableName = id.slice(6);
+      el = document.createElement('table-view');
+      const st = (el as any).state;
+      st.tableName = tableName;
+      st.loading = true;
+      dbService.getTableData(tableName).then(data => {
+        st.data = data;
+        st.loading = false;
+      }).catch((e: any) => {
+        st.error = e.message || e;
+        st.loading = false;
+      });
+    } else if (id.startsWith('chart-')) {
+      el = document.createElement('chart-view');
+    } else if (id.startsWith('map-')) {
+      el = document.createElement('map-view');
+    } else if (id.startsWith('rag-')) {
+      el = document.createElement('rag-menu-view');
+    }
+    if (el) {
+      tabs.get().set(id, { label });
+      el.style.display = 'none';
+      viewCache.set(id, el);
+      document.getElementById('dynamic-view')?.appendChild(el);
+    }
+  });
+  if (activeTabId.peek()) showView(activeTabId.peek());
+  renderTabBar();
 
   const menuGridEl = document.getElementById('menu-grid');
   const chartsGridEl = document.getElementById('charts-grid');
@@ -348,17 +381,22 @@ async function initApp() {
       tables.forEach((tableName: string) => {
         const el = document.createElement('div');
         el.className = menuItem;
-        el.innerHTML = '<div style="font-size: 1.25rem; line-height: 1;">🗄️</div><div style="margin-top: 0.125rem;">' + tableName + '</div>';
+        el.innerHTML = '<div style="font-size: 1.75rem; line-height: 1;">🗄️</div><div style="margin-top: 0.375rem;">' + tableName + '</div>';
         el.onclick = () => {
-          const tabId = `table-${tableName}`;
-          tabs.get().set(tabId, { 
-            label: tableName, 
-            action: () => renderTableContent(tableName) 
+          openTab(`table-${tableName}`, tableName, () => {
+            const view = document.createElement('table-view');
+            const st = (view as any).state;
+            st.tableName = tableName;
+            st.loading = true;
+            dbService.getTableData(tableName).then(data => {
+              st.data = data;
+              st.loading = false;
+            }).catch((e: any) => {
+              st.error = e.message || e;
+              st.loading = false;
+            });
+            return view;
           });
-          activeTabId.set(tabId);
-          (document.getElementById('home-view') as HTMLElement).style.display = 'none';
-          renderTableContent(tableName);
-          renderTabBar();
         };
         menuGridEl?.appendChild(el);
       });
@@ -371,17 +409,9 @@ async function initApp() {
     charts.forEach(chart => {
       const el = document.createElement('div');
       el.className = menuItem;
-      el.innerHTML = `<div style="font-size: 1.25rem; line-height: 1;">${chart.icon}</div><div style="margin-top: 0.125rem;">${chart.label}</div>`;
+      el.innerHTML = `<div style="font-size: 1.75rem; line-height: 1;">${chart.icon}</div><div style="margin-top: 0.375rem;">${chart.label}</div>`;
       el.onclick = () => {
-        const tabId = `chart-${chart.id}`;
-        tabs.get().set(tabId, { 
-          label: chart.label, 
-          action: () => renderChartContent() 
-        });
-        activeTabId.set(tabId);
-        (document.getElementById('home-view') as HTMLElement).style.display = 'none';
-        renderChartContent();
-        renderTabBar();
+        openTab(`chart-${chart.id}`, chart.label, () => document.createElement('chart-view'));
       };
       chartsGridEl?.appendChild(el);
     });
@@ -393,17 +423,9 @@ async function initApp() {
     maps.forEach(map => {
       const el = document.createElement('div');
       el.className = menuItem;
-      el.innerHTML = `<div style="font-size: 1.25rem; line-height: 1;">${map.icon}</div><div style="margin-top: 0.125rem;">${map.label}</div>`;
+      el.innerHTML = `<div style="font-size: 1.75rem; line-height: 1;">${map.icon}</div><div style="margin-top: 0.375rem;">${map.label}</div>`;
       el.onclick = () => {
-        const tabId = `map-${map.id}`;
-        tabs.get().set(tabId, { 
-          label: map.label, 
-          action: () => renderMapContent() 
-        });
-        activeTabId.set(tabId);
-        (document.getElementById('home-view') as HTMLElement).style.display = 'none';
-        renderMapContent();
-        renderTabBar();
+        openTab(`map-${map.id}`, map.label, () => document.createElement('map-view'));
       };
       mapsGridEl?.appendChild(el);
     });
@@ -414,17 +436,9 @@ async function initApp() {
     ragItems.forEach(item => {
       const el = document.createElement('div');
       el.className = menuItem;
-      el.innerHTML = `<div style="font-size: 1.25rem; line-height: 1;">${item.icon}</div><div style="margin-top: 0.125rem;">${item.label}</div>`;
+      el.innerHTML = `<div style="font-size: 1.75rem; line-height: 1;">${item.icon}</div><div style="margin-top: 0.375rem;">${item.label}</div>`;
       el.onclick = () => {
-        const tabId = `rag-${item.id}`;
-        tabs.get().set(tabId, { 
-          label: item.label, 
-          action: () => renderRagMenu() 
-        });
-        activeTabId.set(tabId);
-        (document.getElementById('home-view') as HTMLElement).style.display = 'none';
-        renderRagMenu();
-        renderTabBar();
+        openTab(`rag-${item.id}`, item.label, () => document.createElement('rag-menu-view'));
       };
       ragGridEl?.appendChild(el);
     });

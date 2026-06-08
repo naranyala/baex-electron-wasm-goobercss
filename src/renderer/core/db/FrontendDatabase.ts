@@ -7,8 +7,7 @@ export class FrontendDatabase implements DatabaseInterface {
   async init(name: string = 'baex-app-db'): Promise<void> {
     const sqlite3 = await (sqlite3Module as any)();
     try {
-      // Official SQLite WASM OPFS open
-      this.db = await sqlite3.opfs.open(name);
+      this.db = new sqlite3.oo1.OpfsDb(name);
       console.log(`SQLite OPFS database ${name} initialized successfully`);
     } catch (e) {
       console.error('Failed to open OPFS database, falling back to in-memory:', e);
@@ -29,19 +28,13 @@ export class FrontendDatabase implements DatabaseInterface {
   async query(sql: string): Promise<DatabaseRow[]> {
     if (!this.db) throw new Error('Database not initialized. Call init() first.');
     try {
-      const results = this.db.exec(sql);
-      // The official build returns an array of result sets
-      if (!results || results.length === 0) return [];
-      
-      const { columns, values } = results[0];
-      return values.map((row: any[]) => {
-        const obj: DatabaseRow = {};
-        columns.forEach((col: string, i: number) => {
-          obj[col] = row[i] ?? null;
-        });
-        // Ensure rowid is always present for the framework's CRUD
-        obj.rowid = obj.id ?? (row[0] || null);
-        return obj;
+      const rows: Record<string, any>[] = this.db.exec(sql, {
+        returnValue: 'resultRows',
+        rowMode: 'object',
+      });
+      return rows.map((row: Record<string, any>) => {
+        row.rowid = row.id ?? null;
+        return row as DatabaseRow;
       });
     } catch (e: any) {
       throw new Error(`Query Error: ${e.message}`);

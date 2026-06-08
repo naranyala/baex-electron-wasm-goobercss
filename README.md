@@ -1,6 +1,8 @@
 # BAEX: Rust-WASM Electron Framework
 
-![bee-holding-axe](./bee-holding-axe.jpg)
+<!-- ![bee-holding-axe](./bee-holding-axe.jpg) -->
+
+<div style="width: 100%; text-align: center;"><img src="./bee-holding-axe.jpg" width="30%"></div>
 
 BAEX is a high-performance desktop application framework integrating Rust WASM, Electron, and Web Components. It serves as a playground and a foundation for the Browser API Extended (BAEX) framework.
 

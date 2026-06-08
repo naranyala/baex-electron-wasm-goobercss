@@ -1,18 +1,12 @@
-import { getDatabase, FrontendDatabase } from '../framework/FrontendDatabase';
-import { DatabaseRow } from '../framework/DatabaseTypes';
+import { getDatabase, FrontendDatabase } from '../core/db/FrontendDatabase';
+import { DatabaseRow } from '../core/db/DatabaseTypes';
 
 // Pure Data Transformers
 export const sqlUtils = {
-  toRowObjects: (results: any[]): DatabaseRow[] => {
-    if (!results || results.length === 0) return [];
-    const { columns, values } = results[0];
-    return values.map((row: any[]) => {
-      const obj: DatabaseRow = {};
-      columns.forEach((col: string, i: number) => {
-        obj[col] = row[i] ?? null;
-      });
-      obj.rowid = obj.id ?? (row[0] || null);
-      return obj;
+  toRowObjects: (rows: Record<string, any>[]): DatabaseRow[] => {
+    return rows.map((row) => {
+      row.rowid = row.id ?? null;
+      return row as DatabaseRow;
     });
   },
   escape: (val: string) => val.replace(/'/g, "''"),
@@ -60,8 +54,7 @@ export class DbService {
   queryPipe(sql: string) {
     return async () => {
       const db = await this.getDb();
-      const rows = await db.query(sql);
-      return sqlUtils.toRowObjects(rows);
+      return await db.query(sql);
     };
   }
 

@@ -5,7 +5,7 @@ import { ComponentDefinition } from './types';
 export function defineComponent<S extends object>(config: ComponentDefinition & { initialState: S }) {
   const { name, initialState, render, mounted } = config;
 
-  customElements.define(name, class extends BaseComponent {
+  customElements.define(name!, class extends BaseComponent {
     public state: S;
 
     constructor() {
@@ -22,7 +22,7 @@ export function defineComponent<S extends object>(config: ComponentDefinition & 
           Object.assign(this.state, newState);
         }
       };
-      return render(this.state, helpers);
+      return render!(this.state, helpers);
     }
 
     connectedCallback() {

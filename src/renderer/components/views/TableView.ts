@@ -1,5 +1,5 @@
-import { dbService, sqlUtils } from '../services/DbService.js';
-import { addButton, crudButton, formPanel, formField, formActions, splitPanel, tableContainer } from '../styles/theme.js';
+import { dbService, sqlUtils } from '../../services/DbService.js';
+import { addButton, crudButton, formPanel, formField, formActions, splitPanel, tableContainer } from '../../styles/theme.ts';
 
 export const TableView = {
   name: 'table-view',

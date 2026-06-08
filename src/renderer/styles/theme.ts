@@ -1,22 +1,20 @@
 import { css } from 'goober';
-
 export const theme = {
-  bg: '#0f0f11',
-  surface: '#18181b',
-  elevated: '#1f1f23',
-  border: '#2a2a30',
-  borderFocus: '#52525b',
-  text: '#f4f4f5',
-  textMuted: '#a1a1aa',
-  textDim: '#6b6b7b',
-  accent: '#6366f1',
-  accentHover: '#4f46e5',
-  accentGradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-  radius: '0.625rem',
-  radiusLg: '0.875rem',
+    bg: '#0f0f11',
+    surface: '#18181b',
+    elevated: '#1f1f23',
+    border: '#2a2a30',
+    borderFocus: '#52525b',
+    text: '#f4f4f5',
+    textMuted: '#a1a1aa',
+    textDim: '#6b6b7b',
+    accent: '#6366f1',
+    accentHover: '#4f46e5',
+    accentGradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    radius: '0.625rem',
+    radiusLg: '0.875rem',
 };
-
-export const navBar = css`
+export const navBar = css `
   position: fixed;
   top: 0;
   left: 0;
@@ -31,8 +29,7 @@ export const navBar = css`
   z-index: 100;
   -webkit-app-region: drag;
 `;
-
-export const brandMark = css`
+export const brandHome = css `
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -40,41 +37,28 @@ export const brandMark = css`
   font-weight: 600;
   color: ${theme.text};
   letter-spacing: -0.01em;
-  padding-right: 0.75rem;
+  padding: 0.35rem 0.75rem 0.35rem 0;
   border-right: 1px solid ${theme.border};
   user-select: none;
-  span { background: ${theme.accentGradient}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-`;
-
-export const homeButton = css`
-  background: transparent;
-  border: 1px solid ${theme.border};
-  color: ${theme.textMuted};
-  padding: 0.35rem 0.75rem;
-  border-radius: ${theme.radius};
   cursor: pointer;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  transition: all 0.15s ease;
   -webkit-app-region: no-drag;
-  &:hover { background: ${theme.elevated}; border-color: ${theme.borderFocus}; color: ${theme.text}; }
+  transition: all 0.15s ease;
+  span { background: ${theme.accentGradient}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  &:hover { opacity: 0.8; }
 `;
-
-export const appContainer = css`
+export const appContainer = css `
   min-height: 100vh;
   background: ${theme.bg};
   color: ${theme.text};
   padding-top: 3.5rem;
 `;
-
-export const contentWrapper = css`
+export const contentWrapper = css `
   width: 100%;
   max-width: 64rem;
   margin: 0 auto;
   padding: 2rem 1.5rem 3rem;
 `;
-
-export const searchBar = css`
+export const searchBar = css `
   position: relative;
   width: 100%;
   max-width: 24rem;
@@ -95,8 +79,7 @@ export const searchBar = css`
     pointer-events: none;
   }
 `;
-
-export const searchInput = css`
+export const searchInput = css `
   width: 100%;
   padding: 0.65rem 1rem 0.65rem 2.5rem;
   font-size: 0.875rem;
@@ -109,8 +92,7 @@ export const searchInput = css`
   &::placeholder { color: ${theme.textDim}; }
   &:focus { border-color: ${theme.accent}; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
 `;
-
-export const sectionHeader = css`
+export const sectionHeader = css `
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -127,24 +109,21 @@ export const sectionHeader = css`
     background: linear-gradient(to right, ${theme.border}, transparent);
   }
 `;
-
-export const sectionContainer = css`
+export const sectionContainer = css `
   background: ${theme.surface};
   border: 1px solid ${theme.border};
   border-radius: ${theme.radiusLg};
   overflow: hidden;
 `;
-
-export const menuGrid = css`
+export const menuGrid = css `
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.5rem;
-  padding: 0.75rem;
+  gap: 1rem;
+  padding: 1rem;
 `;
-
-export const menuItem = css`
+export const menuItem = css `
   aspect-ratio: 1;
-  padding: 0.5rem;
+  padding: 1rem;
   background: ${theme.elevated};
   border: 1px solid ${theme.border};
   border-radius: ${theme.radius};
@@ -153,8 +132,8 @@ export const menuItem = css`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
-  font-size: 0.8125rem;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
   font-weight: 500;
   color: ${theme.textMuted};
   transition: all 0.15s ease;
@@ -165,8 +144,7 @@ export const menuItem = css`
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
   }
 `;
-
-export const statusBar = css`
+export const statusBar = css `
   position: fixed;
   bottom: 0;
   left: 0;
@@ -184,8 +162,7 @@ export const statusBar = css`
   transition: background 0.15s ease;
   &:hover { background: ${theme.surface}; }
 `;
-
-export const statusDot = css`
+export const statusDot = css `
   width: 0.375rem;
   height: 0.375rem;
   border-radius: 50%;
@@ -193,15 +170,13 @@ export const statusDot = css`
   margin-right: 0.5rem;
   flex-shrink: 0;
 `;
-
-export const statusDivider = css`
+export const statusDivider = css `
   width: 1px;
   height: 0.875rem;
   background: ${theme.border};
   margin: 0 0.75rem;
 `;
-
-export const modalBackdrop = css`
+export const modalBackdrop = css `
   position: fixed;
   top: 0;
   left: 0;
@@ -216,8 +191,7 @@ export const modalBackdrop = css`
   animation: fadeIn 0.15s ease;
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 `;
-
-export const modalContent = css`
+export const modalContent = css `
   background: ${theme.surface};
   border: 1px solid ${theme.border};
   border-radius: ${theme.radiusLg};
@@ -232,8 +206,7 @@ export const modalContent = css`
   animation: slideUp 0.2s ease;
   @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 `;
-
-export const crudButton = css`
+export const crudButton = css `
   padding: 0.25rem 0.625rem;
   font-size: 0.75rem;
   cursor: pointer;
@@ -245,8 +218,7 @@ export const crudButton = css`
   &:hover { background: ${theme.border}; color: ${theme.text}; }
   &:active { transform: scale(0.97); }
 `;
-
-export const addButton = css`
+export const addButton = css `
   padding: 0.5rem 1rem;
   font-size: 0.8125rem;
   cursor: pointer;
@@ -259,22 +231,19 @@ export const addButton = css`
   &:hover { box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35); transform: translateY(-1px); }
   &:active { transform: translateY(0); }
 `;
-
-export const splitPanel = css`
+export const splitPanel = css `
   display: flex;
   gap: 1rem;
   height: calc(100vh - 10rem);
 `;
-
-export const tableContainer = css`
+export const tableContainer = css `
   flex: 1;
   overflow: auto;
   border: 1px solid ${theme.border};
   border-radius: ${theme.radius};
   background: ${theme.bg};
 `;
-
-export const formPanel = css`
+export const formPanel = css `
   width: 24rem;
   padding: 1.5rem;
   background: ${theme.elevated};
@@ -285,8 +254,7 @@ export const formPanel = css`
   gap: 1rem;
   overflow-y: auto;
 `;
-
-export const formField = css`
+export const formField = css `
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
@@ -303,8 +271,7 @@ export const formField = css`
     &:focus { border-color: ${theme.accent}; }
   }
 `;
-
-export const formActions = css`
+export const formActions = css `
   display: flex;
   gap: 0.5rem;
   margin-top: 0.5rem;
