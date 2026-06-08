@@ -9,13 +9,16 @@
     "build:wasm": "cd core/rust && wasm-pack build --target web",
     "build": "tsc && vite build && electron-builder",
     "preview": "vite preview",
-    "test:frontend": "vitest run"
+    "test:frontend": "vitest run",
+    "docs:gen": "bun run tools/api-doc-gen/src/index.ts",
+    "docs:serve": "bun x serve ."
   },
   "devDependencies": {
     "@types/leaflet": "^1.9.21",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
     "jsdom": "^29.1.1",
+    "tsx": "^4.22.4",
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
     "vite-plugin-electron": "^0.28.6",

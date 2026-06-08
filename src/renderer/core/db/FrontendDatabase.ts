@@ -1,9 +1,19 @@
 import sqlite3Module from '@sqlite.org/sqlite-wasm';
 import { DatabaseRow, DatabaseInterface } from './DatabaseTypes';
 
+/**
+ * An in-browser SQLite database implementation using the Origin Private File System (OPFS)
+ * for persistent storage. Falls back to in-memory database if OPFS is unavailable.
+ */
 export class FrontendDatabase implements DatabaseInterface {
   private db: any = null;
 
+  /**
+   * Initializes the SQLite database.
+   * 
+   * @param {string} name - The name of the database file to create/open in OPFS.
+   * @returns {Promise<void>}
+   */
   async init(name: string = 'baex-app-db'): Promise<void> {
     const sqlite3 = await (sqlite3Module as any)();
     try {
@@ -15,6 +25,13 @@ export class FrontendDatabase implements DatabaseInterface {
     }
   }
 
+  /**
+   * Executes a SQL command that does not return a result set (e.g., CREATE, INSERT).
+   * 
+   * @param {string} sql - The SQL statement to execute.
+   * @returns {Promise<string>} Returns "Success" on successful execution.
+   * @throws {Error} If the database is not initialized or execution fails.
+   */
   async execute(sql: string): Promise<string> {
     if (!this.db) throw new Error('Database not initialized. Call init() first.');
     try {
@@ -25,6 +42,13 @@ export class FrontendDatabase implements DatabaseInterface {
     }
   }
 
+  /**
+   * Executes a SQL query and returns the result as an array of rows.
+   * 
+   * @param {string} sql - The SQL query string.
+   * @returns {Promise<DatabaseRow[]>} An array of row objects.
+   * @throws {Error} If the database is not initialized or query fails.
+   */
   async query(sql: string): Promise<DatabaseRow[]> {
     if (!this.db) throw new Error('Database not initialized. Call init() first.');
     try {
@@ -41,6 +65,13 @@ export class FrontendDatabase implements DatabaseInterface {
     }
   }
 
+  /**
+   * Seeds the database with initial tables and demo data.
+   * Creates categories, users, products, orders, and order items.
+   * 
+   * @returns {Promise<void>}
+   * @throws {Error} If the database is not initialized.
+   */
   async bootstrap(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized. Call init() first.');
 
@@ -71,6 +102,9 @@ export class FrontendDatabase implements DatabaseInterface {
     }
   }
 
+  /**
+   * Closes the database connection and releases resources.
+   */
   close(): void {
     if (this.db) {
       this.db.close();
@@ -81,6 +115,12 @@ export class FrontendDatabase implements DatabaseInterface {
 
 let defaultInstance: FrontendDatabase | null = null;
 
+/**
+ * Provides a singleton instance of the FrontendDatabase.
+ * Initializes and bootstraps the database on first call.
+ * 
+ * @returns {Promise<FrontendDatabase>} The initialized database instance.
+ */
 export async function getDatabase(): Promise<FrontendDatabase> {
   if (!defaultInstance) {
     defaultInstance = new FrontendDatabase();
@@ -90,6 +130,11 @@ export async function getDatabase(): Promise<FrontendDatabase> {
   return defaultInstance;
 }
 
+/**
+ * Fetches the names of all user-created tables in the database.
+ * 
+ * @returns {Promise<string[]>} A list of table names.
+ */
 export async function fetchTables(): Promise<string[]> {
   const db = await getDatabase();
   const rows = await db.query(

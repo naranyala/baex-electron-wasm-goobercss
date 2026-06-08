@@ -1,4 +1,4 @@
-import init, { compile_ir, execute_bytecode } from '../../../core/rust/pkg/wasm_rust.js';
+import init, { compile_ir, execute_bytecode } from '../../../../core/rust/pkg/wasm_rust';
 
 export interface CompiledScript {
   bytecode: Uint8Array;

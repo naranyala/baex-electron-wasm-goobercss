@@ -17,14 +17,14 @@ class MockWorker {
 vi.stubGlobal('Worker', MockWorker);
 
 // Mock the wasm module
-vi.mock('../../../core/rust/pkg/wasm_rust.js', () => ({
+vi.mock('../../../../core/rust/pkg/wasm_rust', () => ({
+  default: vi.fn(),
   process_ir: vi.fn(),
-  default: vi.fn()
 }));
 
 // Import WasmBridge AFTER the mock
 import { WasmBridge } from '../bridge/WasmBridge';
-import * as wasm from '../../../core/rust/pkg/wasm_rust.js';
+import * as wasm from '../../../../core/rust/pkg/wasm_rust';
 
 describe('WasmBridge', () => {
   it('should call process_ir with correct JSON for Add', async () => {

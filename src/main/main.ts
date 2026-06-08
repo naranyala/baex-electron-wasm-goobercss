@@ -5,8 +5,13 @@ import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url);
 
+/**
+ * Resolves the correct path to the native SQLite wrapper.
+ * Handles differences between development mode and packaged ASAR archives.
+ * 
+ * @returns {string} The absolute path to the native sqlite-native index.js.
+ */
 function getSqlitePath() {
-  // Check if we are running from an ASAR archive
   const isPackaged = app.isPackaged;
   const appPath = app.getAppPath();
   
@@ -47,16 +52,25 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // │
 process.env.APP_ROOT = path.join(__dirname, '..')
 
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
+/** The URL of the Vite development server, if applicable. */
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
+/** Path to the compiled Electron main process files. */
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
+/** Path to the compiled renderer process files. */
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
+/** Absolute path to the application's SQLite database file in the user data directory. */
 const DB_PATH = path.join(app.getPath('userData'), 'app.db');
 
-// Bootstrap: Create a relational database schema with demo data
+/**
+ * Initializes the relational database schema and seeds it with demo data.
+ * Creates tables for categories, users, products, orders, and order items.
+ * 
+ * @async
+ * @returns {Promise<void>}
+ */
 async function bootstrapDb() {
   if (!sqlite) {
     console.error('Cannot bootstrap: SQLite module not loaded');
@@ -111,12 +125,24 @@ async function bootstrapDb() {
   }
 }
 
+/**
+ * IPC handler for executing SQL statements.
+ * @param {any} _ - Unused event argument.
+ * @param {string} sql - The SQL statement to execute.
+ * @returns {Promise<string>} The result of the operation.
+ */
 ipcMain.handle('db:execute', (_, sql: string) => {
   if (!sqlite) throw new Error('SQLite native module not loaded');
   console.log('Executing SQL:', sql);
   return sqlite.execute_sql(DB_PATH, sql);
 });
 
+/**
+ * IPC handler for querying the database.
+ * @param {any} _ - Unused event argument.
+ * @param {string} sql - The SQL query to run.
+ * @returns {Promise<any>} The result set parsed as JSON.
+ */
 ipcMain.handle('db:query', (_, sql: string) => {
   if (!sqlite) throw new Error('SQLite native module not loaded');
   console.log('Querying SQL:', sql);
@@ -131,6 +157,9 @@ ipcMain.handle('db:query', (_, sql: string) => {
 
 let win: BrowserWindow | null
 
+/**
+ * Creates the main application window and configures its properties.
+ */
 function createWindow() {
   const projectName = path.basename(process.env.APP_ROOT);
   win = new BrowserWindow({

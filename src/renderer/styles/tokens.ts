@@ -1,0 +1,15 @@
+export const tokens = {
+    bg: '#0f0f11',
+    surface: '#18181b',
+    elevated: '#1f1f23',
+    border: '#2a2a30',
+    borderFocus: '#52525b',
+    text: '#f4f4f5',
+    textMuted: '#a1a1aa',
+    textDim: '#6b6b7b',
+    accent: '#6366f1',
+    accentHover: '#4f46e5',
+    accentGradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    radius: '0.625rem',
+    radiusLg: '0.875rem',
+};

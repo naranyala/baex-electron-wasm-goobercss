@@ -2,6 +2,15 @@ use napi_derive::napi;
 use rusqlite::{Connection, Result as SqliteResult};
 use serde_json::{json, Value};
 
+/// Executes a non-query SQL statement (e.g., INSERT, UPDATE, DELETE) on the specified database.
+/// 
+/// # Arguments
+/// * `db_path` - The absolute path to the SQLite database file.
+/// * `sql` - The SQL statement to be executed.
+/// 
+/// # Returns
+/// * `Ok(String)` - Returns "Success" if the execution was successful.
+/// * `Err(napi::Error)` - Returns an error if the database cannot be opened or the SQL is invalid.
 #[napi]
 pub fn execute_sql(db_path: String, sql: String) -> Result<String, napi::Error> {
     let conn = Connection::open(db_path)
@@ -13,6 +22,16 @@ pub fn execute_sql(db_path: String, sql: String) -> Result<String, napi::Error> 
     Ok("Success".to_string())
 }
 
+/// Executes a SQL query and returns the result set as a JSON string of objects.
+/// Each object in the array represents a row, with keys corresponding to column names.
+/// 
+/// # Arguments
+/// * `db_path` - The absolute path to the SQLite database file.
+/// * `sql` - The SQL query string to execute.
+/// 
+/// # Returns
+/// * `Ok(String)` - A JSON string representation of the result set.
+/// * `Err(napi::Error)` - Returns an error if the database cannot be opened, the query is invalid, or serialization fails.
 #[napi]
 pub fn query_sql(db_path: String, sql: String) -> Result<String, napi::Error> {
     let conn = Connection::open(db_path)

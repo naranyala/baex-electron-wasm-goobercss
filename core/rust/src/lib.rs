@@ -5,16 +5,26 @@ use tracing_wasm::{WASMLayerConfigBuilder, WASMLayer};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
 
+/// Intermediate Representation (IR) Command used for communication between TS and Rust.
+/// Encapsulated as a tagged union to support various operation types.
 #[derive(Deserialize, Debug, PartialEq)]
 #[serde(tag = "type", content = "payload")]
 enum IRCommand {
+    /// Adds two integers.
     Add { a: i32, b: i32 },
+    /// Computes the nth Fibonacci number.
     Fibonacci { n: i32 },
+    /// Computes the factorial of n.
     Factorial { n: i32 },
+    /// Reverses the provided string.
     ReverseString { text: String },
+    /// Checks if the provided string is a palindrome.
     PalindromeCheck { text: String },
+    /// Sends a greeting to the user.
     Greet { name: String },
+    /// Reports a system anomaly for logging purposes.
     ReportAnomaly { message: String },
+    /// Queries the rules/schema of the current IR format.
     RulesQuery,
 }
 
@@ -29,6 +39,14 @@ const OP_GRT: u8 = 0x06;
 const OP_ANO: u8 = 0x07;
 const OP_RUL: u8 = 0x08;
 
+/// Compiles a JSON-encoded IR command into a binary bytecode format.
+/// 
+/// # Arguments
+/// * `command_json` - A JSON string representing an `IRCommand`.
+/// 
+/// # Returns
+/// * `Ok(Vec<u8>)` - The compiled bytecode sequence.
+/// * `Err(JsValue)` - An error if the JSON is invalid.
 #[wasm_bindgen]
 pub fn compile_ir(command_json: &str) -> Result<Vec<u8>, JsValue> {
     let command: IRCommand = serde_json::from_str(command_json)
@@ -80,6 +98,14 @@ pub fn compile_ir(command_json: &str) -> Result<Vec<u8>, JsValue> {
     Ok(bytecode)
 }
 
+/// Executes a pre-compiled bytecode sequence and returns the result.
+/// 
+/// # Arguments
+/// * `bytecode` - A slice of bytes containing the opcode and payload.
+/// 
+/// # Returns
+/// * `Ok(JsValue)` - The result of the operation encoded as a JS value.
+/// * `Err(JsValue)` - An error if bytecode is empty or opcode is unknown.
 #[wasm_bindgen]
 pub fn execute_bytecode(bytecode: &[u8]) -> Result<JsValue, JsValue> {
     if bytecode.is_empty() {
@@ -141,15 +167,21 @@ pub fn execute_bytecode(bytecode: &[u8]) -> Result<JsValue, JsValue> {
     Ok(serde_wasm_bindgen::to_value(&result)?)
 }
 
+/// The possible results of an IR operation.
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type", content = "payload")]
 enum IRResult {
+    /// A numerical result.
     Number(i32),
+    /// No result returned.
     Void,
+    /// An error result with a descriptive message.
     Error { message: String },
+    /// A structural or schema result.
     Rules { schema: String },
 }
 
+/// Wasm entry point. Initializes the tracing subscriber for browser logging.
 #[wasm_bindgen(start)]
 pub fn start() {
     let config = WASMLayerConfigBuilder::new().build();
@@ -158,6 +190,7 @@ pub fn start() {
     ).unwrap();
 }
 
+/// Internal logic for processing IR commands. Used by both `process_ir` and `execute_bytecode`.
 #[instrument]
 fn process_ir_logic(command: IRCommand) -> IRResult {
     match command {
@@ -201,6 +234,13 @@ fn process_ir_logic(command: IRCommand) -> IRResult {
     }
 }
 
+/// Processes an IR command sent as a JSON string.
+/// 
+/// # Arguments
+/// * `command_json` - A JSON string representing an `IRCommand`.
+/// 
+/// # Returns
+/// * `Ok(JsValue)` - The result of the operation.
 #[wasm_bindgen]
 pub fn process_ir(command_json: &str) -> Result<JsValue, JsValue> {
     info!("IR Command received: {}", command_json);
@@ -221,11 +261,13 @@ pub fn process_ir(command_json: &str) -> Result<JsValue, JsValue> {
     Ok(serde_wasm_bindgen::to_value(&result)?)
 }
 
+/// Simple addition helper exported to WASM.
 #[wasm_bindgen]
 pub fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 
+/// Internal iterative implementation of Fibonacci.
 fn fibonacci_internal(n: i32) -> i32 {
     if n <= 1 { return n; }
     let mut a = 0;
@@ -238,20 +280,20 @@ fn fibonacci_internal(n: i32) -> i32 {
     a
 }
 
+/// Internal implementation of Factorial.
 fn factorial_internal(n: i32) -> i32 {
     (1..=n).product()
 }
 
+/// Calculates the nth Fibonacci number.
 #[wasm_bindgen]
 pub fn fibonacci(n: i32) -> i32 {
     fibonacci_internal(n)
 }
 
+/// Updates the browser document title as a greeting.
 fn extended_greet_internal(name: &str) {
     let greeting = format!("Hello from Rust Wasm, {}", name);
-    
-    // Logging here is handled by tracing-wasm now, so we can remove console::log_1 if we want, 
-    // but keeping it doesn't hurt.
     
     #[cfg(target_arch = "wasm32")]
     {

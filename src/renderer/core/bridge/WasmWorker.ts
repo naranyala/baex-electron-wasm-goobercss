@@ -1,4 +1,4 @@
-import init, { process_ir } from '../../../core/rust/pkg/wasm_rust.js';
+import init, { process_ir } from '../../../../core/rust/pkg/wasm_rust';
 
 async function startWorker() {
   await init();
