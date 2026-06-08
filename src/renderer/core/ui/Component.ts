@@ -1,6 +1,6 @@
-import { createReactiveState } from './ReactiveState';
+import { createReactiveState } from '../reactivity/ReactiveState';
 import { BaseComponent } from './BaseComponent';
-import { ComponentDefinition } from './types';
+import { ComponentDefinition } from '../bridge/types';
 
 export function defineComponent<S extends object>(config: ComponentDefinition & { initialState: S }) {
   const { name, initialState, render, mounted } = config;

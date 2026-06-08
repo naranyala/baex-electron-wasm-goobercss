@@ -1,5 +1,5 @@
-import { createEffect } from './Reactivity';
-import { ComponentDefinition } from './types';
+import { createEffect } from '../reactivity/Reactivity';
+import { ComponentDefinition } from '../bridge/types';
 
 export abstract class BaseComponent extends HTMLElement {
   protected shadow: ShadowRoot;
