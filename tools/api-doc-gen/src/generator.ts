@@ -15,10 +15,20 @@ export class Generator {
   }
 
   static generate(entries: DocEntry[]): string {
-    const entriesHtml = entries.map((e, idx) => {
-      const uniqueId = e.parent ? `${e.parent}_${e.name}` : e.name;
+    // Deduplicate entries based on file, line, and name to prevent accidental double-parsing
+    const seen = new Set();
+    const uniqueEntries = entries.filter(e => {
+      const key = `${e.file}:${e.line}:${e.name}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const entriesHtml = uniqueEntries.map((e, idx) => {
+      const uniqueId = `entry-${btoa(e.file + e.line).replace(/=/g, '')}`;
+      const hasDoc = e.description && e.description !== '<em>No description provided.</em>';
       return `
-    <div class="entry" id="${uniqueId}">
+    <div class="entry" id="${uniqueId}" data-has-doc="${hasDoc}">
       <div class="entry-header">
         <span class="type-badge ${e.type}">${e.type}</span>
         <span class="lang-badge ${e.language}">${e.language}</span>
@@ -48,8 +58,8 @@ export class Generator {
   `;
     }).join('');
 
-    const navHtml = entries.map((e, idx) => {
-      const uniqueId = e.parent ? `${e.parent}_${e.name}` : e.name;
+    const navHtml = uniqueEntries.map((e, idx) => {
+      const uniqueId = `entry-${btoa(e.file + e.line).replace(/=/g, '')}`;
       return `
     <a href="#${uniqueId}" class="nav-item" data-name="${e.name.toLowerCase()}">${e.parent ? e.parent + '.' : ''}${e.name}</a>
   `;
@@ -84,6 +94,13 @@ export class Generator {
         .nav-item { display: block; padding: 8px 24px; text-decoration: none; color: var(--text-muted); font-size: 14px; border-left: 3px solid transparent; transition: all 0.2s; }
         .nav-item:hover { background: #21262d; color: var(--text-color); border-left-color: var(--primary-color); }
         main { flex: 1; overflow-y: auto; padding: 60px; background: var(--bg-color); }
+        
+        .filter-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding: 12px 20px; background: var(--sidebar-bg); border: 1px solid var(--border-color); border-radius: 8px; }
+        .filter-group { display: flex; gap: 8px; }
+        .filter-btn { padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .filter-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .filter-count { font-size: 13px; color: var(--text-muted); font-family: monospace; }
+
         .entry { margin-bottom: 60px; padding-bottom: 40px; border-bottom: 1px solid var(--border-color); }
         .entry-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
         .name { font-size: 28px; font-weight: 700; color: #f0f6fc; }
@@ -118,6 +135,16 @@ export class Generator {
     </aside>
     <main>
         <h1>API Reference</h1>
+        
+        <div class="filter-bar">
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+                <button class="filter-btn" onclick="setFilter('documented', this)">Documented</button>
+                <button class="filter-btn" onclick="setFilter('undocumented', this)">Undocumented</button>
+            </div>
+            <div class="filter-count" id="entry-count">Showing ${uniqueEntries.length} of ${uniqueEntries.length} entries</div>
+        </div>
+
         ${entriesHtml || '<p>No documentation entries found.</p>'}
     </main>
     <script>
@@ -126,6 +153,26 @@ export class Generator {
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.style.display = item.dataset.name.includes(query) ? 'block' : 'none';
             });
+        }
+
+        function setFilter(type, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const entries = document.querySelectorAll('.entry');
+            let visibleCount = 0;
+
+            entries.forEach(entry => {
+                const hasDoc = entry.dataset.hasDoc === 'true';
+                let visible = true;
+                if (type === 'documented') visible = hasDoc;
+                else if (type === 'undocumented') visible = !hasDoc;
+                
+                entry.style.display = visible ? 'block' : 'none';
+                if (visible) visibleCount++;
+            });
+
+            document.getElementById('entry-count').innerText = \`Showing \${visibleCount} of \${entries.length} entries\`;
         }
     </script>
 </body>

@@ -1,13 +1,26 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
+/**
+ * A spatial visualization component that integrates the Leaflet.js library.
+ * Provides an interactive map interface for geospatial data display.
+ */
 export const MapView = {
+  /** Unique identifier for the component. */
   name: 'map-view',
+  /** Initial state for the map configuration. */
   initialState: {
+    /** Latitude and longitude of the initial center point. */
     center: [51.505, -0.09],
+    /** Initial zoom level. */
     zoom: 13,
+    /** Title displayed in the header. */
     title: 'World Map'
   },
+  /**
+   * Renders the map container and styles.
+   * Note: The actual map is initialized in the mounted hook.
+   */
   render: (state: any) => `
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0; height: 80vh;">
@@ -21,6 +34,11 @@ export const MapView = {
       </div>
     </div>
   `,
+  /**
+   * Lifecycle hook: initializes the Leaflet map instance inside the shadow DOM.
+   * @param {HTMLElement} el - The root element of the component.
+   * @param {any} state - The current state of the component.
+   */
   mounted: (el: any, state: any) => {
     const mapEl = el.shadowRoot?.getElementById('leaflet-map');
     if (!mapEl) return;

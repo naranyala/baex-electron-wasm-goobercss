@@ -1,9 +1,17 @@
 import embed from 'vega-embed';
 
+/**
+ * A data visualization component that utilizes Vega-Lite to render charts.
+ * Integrates with the reactive state to visualize system performance metrics.
+ */
 export const ChartView = {
+  /** Unique identifier for the component. */
   name: 'chart-view',
+  /** Initial state for the chart visualization. */
   initialState: {
+    /** The type of chart to render (e.g., 'bar', 'line'). */
     chartType: 'bar',
+    /** The data points to be visualized. */
     data: [
       { category: 'Wasm', value: 45 },
       { category: 'Rust', value: 80 },
@@ -11,6 +19,10 @@ export const ChartView = {
       { category: 'C++', value: 30 },
     ]
   },
+  /**
+   * Renders the chart container and header.
+   * The actual chart is injected into the #vega-chart div during the mounted hook.
+   */
   render: () => `
     <div style="display: flex; flex-direction: column; align-items: center; gap: 1.5rem; padding: 1.5rem 0;">
       <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -23,6 +35,11 @@ export const ChartView = {
       </div>
     </div>
   `,
+  /**
+   * Lifecycle hook: configures the Vega-Lite specification and embeds the chart.
+   * @param {HTMLElement} el - The root element of the component.
+   * @param {any} state - The current state containing the data to visualize.
+   */
   mounted: (el: any, state: any) => {
     const chartSpec = {
       $schema: 'https://vega.github.io/schema/vega-lite/v5.json',

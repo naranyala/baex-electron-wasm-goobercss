@@ -1,9 +1,21 @@
 import { theme, menuItem, menuGrid } from '../../styles/theme.ts';
+
+/**
+ * A high-level menu view for the RAG (Retrieval-Augmented Generation) pipeline.
+ * Organizes system capabilities into functional categories like Ingestion, Embedding, and Generation.
+ */
 export const RagMenuView = {
+    /** Unique identifier for the component. */
     name: 'rag-menu-view',
+    /** Initial state for the menu view. */
     initialState: {
+        /** The currently active category. */
         activeCategory: 'Ingestion'
     },
+    /**
+     * Renders the RAG capability grid.
+     * Maps a predefined category list to a grid of interactive menu items.
+     */
     render: (_state: any) => {
         const categories = {
             'Ingestion': [
@@ -45,6 +57,10 @@ export const RagMenuView = {
       </div>
     `;
     },
+    /**
+     * Lifecycle hook: attaches click listeners to the menu grid.
+     * @param {HTMLElement} el - The root element of the component.
+     */
     mounted: (el: any) => {
         el.addEventListener('click', (e: Event) => {
             const target = e.target as HTMLElement | null;

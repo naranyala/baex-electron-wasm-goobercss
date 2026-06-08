@@ -26,10 +26,17 @@ async function main() {
 
   const allEntries = [];
   for (const file of files) {
+    const absolutePath = path.resolve(file);
     const content = fs.readFileSync(file, 'utf8');
     const parser = parsers.find(p => p.canParse(file));
     if (parser) {
-      allEntries.push(...parser.parse(file, content));
+      const entries = parser.parse(file, content);
+      // Update entries to use absolute paths
+      const updatedEntries = entries.map(e => ({
+        ...e,
+        file: absolutePath
+      }));
+      allEntries.push(...updatedEntries);
     }
   }
 
