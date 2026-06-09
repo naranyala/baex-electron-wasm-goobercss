@@ -1,6 +1,8 @@
 # EXBA: Extended Browser API
 
-![x-sword-humanoid-bee](./x-sword-humanoid-bee.png)
+<!-- ![x-sword-humanoid-bee](./x-sword-humanoid-bee.png) -->
+
+<div><img src="./x-sword-humanoid-bee.png" width="40%"/></div>
 
 EXBA is a framework for building browser-native Web Components powered by
 Rust/WASM computation and fine-grained signal reactivity. The name stands for
@@ -64,15 +66,104 @@ through narrow, typed interfaces:
 Each layer can be tested, modified, or replaced independently as long as the
 interface contract is maintained.
 
+## Component Development Guide
+
+To ensure consistency and performance, all components must follow the **EXBA Standard Component Contract**.
+
+### The Golden Rules
+
+1. **Surgical Rendering**: Use the `html` tagged template. This enables targeted DOM patching instead of expensive `innerHTML` replacements.
+2. **State Bifurcation**:
+   - **Local State**: Use `initialState` for transient UI state (e.g., `isExpanded`).
+   - **Domain State**: Use `rustState` for global business logic and WASM-backed data.
+3. **Targeted Binding**: Use the `bindings` config for high-frequency updates to specific elements. This bypasses the full `render()` cycle for maximum performance.
+4. **Themed Styling**: Define styles in a `styles` object using `goober`, referencing tokens from `theme.ts`.
+5. **Composition**: Use `<slot>` for container components and `provide()`/`inject()` for deep state distribution.
+6. **Lifecycle Hygiene**: Use `mounted` for 3rd-party JS initialization and always push cleanup functions to `this._cleanups`.
+
+### Pattern A: Static Reusable Components
+For high-performance, complex components, define them as constants.
+
+```typescript
+export const UserProfile = defineComponent({
+  name: 'user-profile',
+  initialState: { isExpanded: false },
+  render: (state) => html`
+    <div class="${styles.container}">
+      <div class="${styles.label}">User: ${rustState.userName.get()}</div>
+      <button id="toggle-btn">${state.isExpanded ? 'Collapse' : 'Expand'}</button>
+    </div>
+  `,
+  events: {
+    'click #toggle-btn': (e, { setState }) => setState(s => ({ isExpanded: !s.isExpanded })),
+  }
+});
+```
+
+### Pattern B: Dynamic Component Generation
+For data-driven UIs (e.g., forms generated from a JSON schema), use the `ComponentFactory`. This allows you to instantiate components dynamically at runtime.
+
+```typescript
+import { ComponentFactory } from '../core/ui/ComponentFactory.js';
+
+const formConfig = {
+  tag: 'dynamic-user-form',
+  title: 'User Settings',
+  initialState: { name: 'Guest' },
+  renderSchema: [
+    { type: 'text', label: 'Current User', binding: 'name' },
+    { type: 'input', label: 'Edit Name', binding: 'name' }
+  ]
+};
+
+// Register the component dynamically
+ComponentFactory.registerDynamic(formConfig);
+
+// Usage in HTML
+// <dynamic-user-form></dynamic-user-form>
+```
+
+---
+
+## Core-Shell Architecture (Professionalized)
+
+EXBA utilizes a **Core-Shell Architecture** to maximize the strengths of both Rust and TypeScript. 
+
+- **The Core (Rust)**: Acts as the "Brain". It is the Single Source of Truth (SSOT) for application state and business logic. State mutations are performed exclusively in Rust via a Command-Query pattern.
+- **The Shell (TypeScript)**: Acts as the "Skin". It handles the DOM, user interactions, and rendering. It reflects the Rust state using fine-grained signals.
+
+This separation ensures that complex logic is type-safe and performant in Rust, while the UI remains highly responsive and native in TypeScript.
+
+### Developer Guide: Adding a New Feature
+
+To add a new state-driven feature to EXBA, follow this four-step pipeline:
+
+1. **Rust State (`core/rust/src/state.rs`)**:
+   - Add a field to the `AppState` struct.
+   - Add a variant to the `AppCommand` enum (e.g., `SetUserPreference { key: String, value: String }`).
+   - Implement the logic in `StateStore::dispatch` to mutate the state.
+
+2. **WASM Bridge (`core/rust/src/state.rs`)**:
+   - Ensure the new state and commands are correctly serialized via `serde`.
+   - The existing `dispatch_app_command` function automatically handles the routing.
+
+3. **TS Reactivity (`src/renderer/core/reactivity/RustState.ts`)**:
+   - Add a corresponding `createSignal` to the `RustStateStore` class.
+   - Update `updateSignals(state)` to map the Rust state field to the TS signal.
+
+4. **View Integration (`src/renderer/components/*.ts`)**:
+   - In your component's `render` or `bindings`, use `rustState.yourSignal.get()`.
+   - To trigger changes, call `rustState.dispatch('CommandName', { payload })`.
+
 ---
 
 ## Architecture
 
 ```
   View Layer        Custom Elements + Shadow DOM + goober CSS-in-JS
-  Reactivity Layer  createSignal / createEffect / bindSignal
-  Bridge Layer      WorkerBridge + WasmWorker + typed IR commands
-  WASM Layer        Rust compiled to wasm32-unknown-unknown
+  Reactivity Layer  createSignal / createEffect / RustState (Sycnhronized)
+  Bridge Layer      WorkerBridge + WasmWorker + Typed Command Dispatcher
+  WASM Layer        Rust Core (AppState + StateStore + Business Logic)
 ```
 
 ### WASM Layer
@@ -173,6 +264,7 @@ Shadow Root.
 | Module | File | Responsibility |
 |--------|------|----------------|
 | `createSignal` / `createEffect` | `core/reactivity/Reactivity.ts` | Reactive primitives. Signals track subscribers via `globalThis.__currentEffect`. Effects auto-subscribe to signals read during execution. |
+| `RustState` | `core/reactivity/RustState.ts` | Mirrors Rust `AppState` using TS signals. Provides `dispatch()` to mutate state in Rust and syncs results back to UI. |
 | `BaseComponent` | `core/ui/BaseComponent.ts` | Abstract custom element base. Attaches Shadow DOM. Wires `createEffect` to `update()` in `connectedCallback`. `disconnectedCallback` cleans up effects and registered hooks. |
 | `defineComponent` | `core/ui/Component.ts` | Factory: creates a `customElements.define()` class extending `BaseComponent`. State is signal-backed. Exposes `setState()` mutation API. Wires `events` via shadow-root delegation. |
 | `WasmBridge` | `core/bridge/WasmBridge.ts` | Typed high-level API (`compute`, `text`, `system`). Sends IR commands to WorkerBridge, returns `Promise<any>`. |
@@ -189,6 +281,8 @@ Shadow Root.
 
 | Export | File | Responsibility |
 |--------|------|----------------|
+| `dispatch_app_command` | `core/rust/src/state.rs` | Processes high-level `AppCommand` enums, mutates `AppState` (SSOT), and returns updated state. |
+| `get_app_state` | `core/rust/src/state.rs` | Returns a snapshot of the current `AppState`. |
 | `process_ir(command_json)` | `core/rust/src/lib.rs` | Parses JSON IR string, dispatches to handler (Add, Fibonacci, Factorial, ReverseString, PalindromeCheck, Greet, ReportAnomaly, RulesQuery). Returns IRResult as JSON. |
 | `compile_ir(command_json)` | `core/rust/src/lib.rs` | Compiles JSON IR into binary bytecode (8 opcodes: 0x01-0x08). Returns `Uint8Array`. |
 | `execute_bytecode(bytecode)` | `core/rust/src/lib.rs` | Executes pre-compiled bytecode. Returns result. |

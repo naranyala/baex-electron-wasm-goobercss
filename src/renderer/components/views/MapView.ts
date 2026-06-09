@@ -1,45 +1,74 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { defineComponent } from '../../core/ui/Component.js';
+import { html } from '../../core/ui/Templates.js';
+import { theme } from '../../styles/theme.ts';
+import { css } from 'goober';
 
-/**
- * A spatial visualization component that integrates the Leaflet.js library.
- * Provides an interactive map interface for geospatial data display.
- */
-export const MapView = {
-  /** Unique identifier for the component. */
+const styles = {
+  wrapper: css`
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0;
+    height: 80vh;
+  `,
+  header: css`
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  `,
+  title: css`
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  `,
+  badge: css`
+    font-size: 0.75rem;
+    color: ${theme.subtitleColor};
+    background: #1f1f23;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid ${theme.borderColor};
+  `,
+  mapContainer: css`
+    flex: 1;
+    border-radius: 0.875rem;
+    border: 1px solid ${theme.borderColor};
+    background: #18181b;
+    min-height: 400px;
+  `,
+  footer: css`
+    font-size: 0.8125rem;
+    color: ${theme.subtitleColor};
+    text-align: center;
+  `
+};
+
+export const MapView = defineComponent({
   name: 'map-view',
-  /** Initial state for the map configuration. */
   initialState: {
-    /** Latitude and longitude of the initial center point. */
     center: [51.505, -0.09],
-    /** Initial zoom level. */
     zoom: 13,
-    /** Title displayed in the header. */
     title: 'World Map'
   },
-  /**
-   * Renders the map container and styles.
-   * Note: The actual map is initialized in the mounted hook.
-   */
-  render: (state: any) => `
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0; height: 80vh;">
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <h2 style="margin: 0; font-size: 1.125rem; font-weight: 600; letter-spacing: -0.01em; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${state.title}</h2>
-        <span style="font-size: 0.75rem; color: #6b6b7b; background: #1f1f23; padding: 0.125rem 0.5rem; border-radius: 0.25rem; border: 1px solid #2a2a30;">Leaflet</span>
+  render: (state) => html`
+    <div class="${styles.wrapper}">
+      <div class="${styles.header}">
+        <h2 class="${styles.title}">${state.title}</h2>
+        <span class="${styles.badge}">Leaflet</span>
       </div>
-      <div id="leaflet-map" style="flex: 1; border-radius: 0.875rem; border: 1px solid #2a2a30; background: #18181b; min-height: 400px;"></div>
-      <div style="font-size: 0.8125rem; color: #6b6b7b; text-align: center;">
+      <div id="leaflet-map" class="${styles.mapContainer}"></div>
+      <div class="${styles.footer}">
         Spatial data visualization layer powered by Leaflet.js
       </div>
     </div>
   `,
-  /**
-   * Lifecycle hook: initializes the Leaflet map instance inside the shadow DOM.
-   * @param {HTMLElement} el - The root element of the component.
-   * @param {any} state - The current state of the component.
-   */
-  mounted: (el: any, state: any) => {
+  mounted: (el, state) => {
     const mapEl = el.shadowRoot?.getElementById('leaflet-map');
     if (!mapEl) return;
     
@@ -53,4 +82,4 @@ export const MapView = {
     
     setTimeout(() => map.invalidateSize(), 100);
   }
-};
+});

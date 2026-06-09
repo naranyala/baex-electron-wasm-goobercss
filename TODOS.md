@@ -52,12 +52,41 @@ The Proxy-based reactivity system is replaced with native `createSignal` /
       events config so views can bind without writing selectors.
 - [ ] **E2E tests**: Playwright tests for the Rust-to-DOM pipeline.
 
+## Phase 3: Framework Professionalization (Core Architecture)
+
+This phase focuses on moving from simple "Configuration" to a "Contract"
+based framework, introducing primitives that handle complex UI state.
+
+- [x] **Targeted DOM Binding**: Implement a `bindings` config in
+      `ComponentDefinition` to use `bindText`, `bindAttr`, and `bindClass`
+      for surgical DOM updates.
+- [x] **Slot Support**: Implement `<slot>` support to allow component
+      composition (Container components).
+- [x] **Error Boundaries**: Add a mechanism to catch render errors and show
+      fallback UI per component.
+- [x] **Template Cloning**: Transition from `innerHTML` string returns to
+      cloning `<template>` elements to preserve DOM nodes and focus.
+- [x] **Props Management**: Full support for `observedAttributes` and prop
+      reactivity in `BaseComponent`.
+
+## Phase 4: UI/UX Enrichment (Interactions & Scale)
+
+Focuses on a rich library of interaction primitives and architectural
+scaling patterns.
+
+- [ ] **Interaction Primitives**: Implement `FocusTrap`, `KeyboardManager`,
+      and `Transition` (Enter/Leave) animation API.
+- [x] **Context API**: Implement `provide` and `inject` for deep state
+      distribution without prop-drilling.
+- [ ] **Primitives Library**: Expand `core/ui/Primitives.ts` with accessibility
+      and motion helpers.
+- [ ] **Performance Profiling**: Integrate WASM memory pooling and
+      selective signal subscriptions to reduce re-renders.
+
 ## Future Improvements
 
 ### Engine (High Priority)
-- **Template engine / lit-html integration**: Replace innerHTML with
-  `html` tagged template that diffs/patches only changed DOM nodes.
-  This fixes the event-listener-loss problem once and for all.
+- **Template engine / lit-html integration**: (Integrated into Phase 3)
 - **Signal-based component state (deep signals)**: Instead of a single
   signal for the entire state object, create signals for individual
   properties so mutations to nested state don't trigger full re-renders.
@@ -74,8 +103,7 @@ The Proxy-based reactivity system is replaced with native `createSignal` /
   component skeleton.
 
 ### Performance (Lower Priority)
-- **SharedArrayBuffer zero-copy**: Replace JSON stringify/parse with
-  structured clone or SAB transfer for large WASM payloads.
+- **SharedArrayBuffer zero-copy**: (Moved to Phase 2)
 - **WASM memory pooling**: Pre-allocate WASM linear memory to avoid
   repeated growth.
 - **Selective signal subscriptions**: Avoid re-running effects when
@@ -83,7 +111,7 @@ The Proxy-based reactivity system is replaced with native `createSignal` /
 
 ### Testing & Quality
 - [ ] Frontend coverage: integration tests for WasmBridge + WorkerBridge
-- [ ] E2E tests with Playwright (full Rust→WASM→DOM pipeline)
+- [ ] E2E tests with Playwright (full Rust→DOM pipeline)
 - [ ] Rust-side: property-based testing for IR command roundtrips
 - [ ] Memory profiling for WASM linear memory heap
 

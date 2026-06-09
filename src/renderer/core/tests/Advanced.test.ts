@@ -1,11 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import { compiler } from '../bridge/Compiler';
 
-vi.mock('../../../core/rust/pkg/wasm_rust.js', () => ({
-  default: vi.fn(),
-  compile_ir: vi.fn(() => new Uint8Array([0x01, 0x00, 0x00, 0x00])),
-  execute_bytecode: vi.fn(() => 0),
-  init: vi.fn(),
+vi.mock('../../../../core/rust/pkg/wasm_rust', () => ({
+  default: vi.fn().mockResolvedValue(undefined),
+  compile_ir: vi.fn((json: string) => {
+    if (json.includes('ReverseString')) return new Uint8Array([0x02, 0x00]);
+    return new Uint8Array([0x01, 0x00]);
+  }),
+  execute_bytecode: vi.fn((b: Uint8Array) => {
+    if (b[0] === 0x02) return 'XEAB';
+    return 0;
+  }),
 }));
 
 describe('Compiler', () => {

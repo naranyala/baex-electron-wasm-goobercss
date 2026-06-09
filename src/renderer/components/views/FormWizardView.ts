@@ -1,4 +1,7 @@
 import { css } from 'goober';
+import { defineComponent } from '../../core/ui/Component.js';
+import { html } from '../../core/ui/Templates.js';
+import { theme } from '../../styles/theme.ts';
 
 const styles = {
   container: css`
@@ -6,8 +9,9 @@ const styles = {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     max-width: 650px;
     margin: 0 auto;
-    color: #c9d1d9;
+    color: ${theme.subtitleColor};
     animation: fadeIn 0.6s ease-out;
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   `,
   header: css`
     text-align: center;
@@ -16,16 +20,16 @@ const styles = {
   title: css`
     font-size: 36px;
     font-weight: 800;
-    color: #f0f6fc;
+    color: ${theme.textColor};
     margin-bottom: 12px;
     letter-spacing: -0.04em;
-    background: linear-gradient(135deg, #fff 0%, #58a6ff 100%);
+    background: ${theme.accentGradient};
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   `,
   subtitle: css`
     font-size: 16px;
-    color: #8b949e;
+    color: ${theme.subtitleColor};
     max-width: 480px;
     margin: 0 auto;
     line-height: 1.6;
@@ -39,14 +43,14 @@ const styles = {
     max-width: 440px;
     margin-left: auto;
     margin-right: auto;
-    &:before {
+    &::before {
       content: '';
       position: absolute;
       top: 50%;
       left: 0;
       right: 0;
       height: 2px;
-      background: #30363d;
+      background: ${theme.borderColor};
       z-index: 0;
       transform: translateY(-50%);
     }
@@ -55,9 +59,9 @@ const styles = {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #161b22;
-    border: 2px solid #30363d;
-    color: #8b949e;
+    background: ${theme.surface};
+    border: 2px solid ${theme.borderColor};
+    color: ${theme.subtitleColor};
     display: flex;
     align-items: center;
     justify-content: center;
@@ -66,27 +70,41 @@ const styles = {
     z-index: 1;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     &.active {
-      border-color: #58a6ff;
-      color: #58a6ff;
-      box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.2);
+      border-color: ${theme.accentColor};
+      color: ${theme.accentColor};
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
       transform: scale(1.15);
-      background: #0d1117;
+      background: ${theme.bg};
     }
     &.completed {
-      background: #58a6ff;
-      border-color: #58a6ff;
+      background: ${theme.accentColor};
+      border-color: ${theme.accentColor};
       color: #fff;
     }
   `,
   card: css`
-    background: rgba(22, 23, 30, 0.8);
+    background: ${theme.surface};
     backdrop-filter: blur(12px);
-    border: 1px solid #30363d;
-    border-radius: 32px;
+    border: 1px solid ${theme.borderColor};
+    border-radius: ${theme.radiusLg};
     padding: 48px;
     box-shadow: 0 30px 60px rgba(0,0,0,0.5);
     animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
+    @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  `,
+  stepHeader: css`
+    margin-bottom: 24px;
+    text-align: center;
+  `,
+  stepTitle: css`
+    font-size: 20px;
+    color: ${theme.textColor};
+    margin-bottom: 8px;
+  `,
+  stepDesc: css`
+    font-size: 14px;
+    color: ${theme.subtitleColor};
   `,
   field: css`
     margin-bottom: 28px;
@@ -94,24 +112,25 @@ const styles = {
       display: block;
       font-size: 13px;
       font-weight: 600;
-      color: #8b949e;
+      color: ${theme.subtitleColor};
       margin-bottom: 10px;
       transition: color 0.2s;
     }
     input, select, textarea {
       width: 100%;
       padding: 14px 18px;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 14px;
-      color: #f0f6fc;
+      background: ${theme.bg};
+      border: 1px solid ${theme.borderColor};
+      border-radius: ${theme.radius};
+      color: ${theme.textColor};
       font-size: 15px;
       outline: none;
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      &:focus { 
-        border-color: #58a6ff; 
-        box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.1);
-        background: #161b22;
+      box-sizing: border-box;
+      &:focus {
+        border-color: ${theme.accentColor};
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        background: ${theme.surface};
       }
     }
   `,
@@ -120,11 +139,11 @@ const styles = {
     justify-content: space-between;
     margin-top: 48px;
     padding-top: 32px;
-    border-top: 1px solid #30363d;
+    border-top: 1px solid ${theme.borderColor};
   `,
   btn: css`
     padding: 14px 28px;
-    border-radius: 14px;
+    border-radius: ${theme.radius};
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
@@ -139,40 +158,55 @@ const styles = {
     }
   `,
   btnPrimary: css`
-    background: linear-gradient(135deg, #58a6ff 0%, #3b82f6 100%);
+    background: ${theme.accentGradient};
     color: #fff;
-    box-shadow: 0 4px 15px rgba(88, 166, 255, 0.3);
-    &:hover { 
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(88, 166, 255, 0.4);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
     }
     &:active { transform: translateY(0); }
   `,
   btnSecondary: css`
     background: transparent;
-    color: #8b949e;
-    border: 1px solid #30363d;
-    &:hover { 
-      background: #21262d; 
-      color: #f0f6fc;
-      border-color: #484f58;
+    color: ${theme.subtitleColor};
+    border: 1px solid ${theme.borderColor};
+    &:hover {
+      background: ${theme.elevated};
+      color: ${theme.textColor};
+      border-color: ${theme.borderFocus};
     }
+  `,
+  reviewCard: css`
+    background: ${theme.bg};
+    padding: 24px;
+    border-radius: ${theme.radius};
+    border: 1px solid ${theme.borderColor};
+    font-size: 14px;
+    line-height: 1.8;
+  `,
+  reviewRow: css`
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    border-bottom: 1px solid ${theme.elevated};
+    padding-bottom: 8px;
+  `,
+  reviewLabel: css`
+    color: ${theme.subtitleColor};
+  `,
+  reviewValue: css`
+    color: ${theme.textColor};
+    font-weight: 500;
+  `,
+  reviewDesc: css`
+    margin-top: 16px;
+    .reviewLabel { display: block; margin-bottom: 6px; }
+    .reviewValue { font-style: italic; }
   `
 };
 
-interface WizardState {
-  step: number;
-  formData: {
-    name: string;
-    email: string;
-    project: string;
-    priority: string;
-    description: string;
-  };
-  isSubmitting: boolean;
-}
-
-export const FormWizardView = {
+export const FormWizardView = defineComponent({
   name: 'form-wizard-view',
   initialState: {
     step: 0,
@@ -189,32 +223,32 @@ export const FormWizardView = {
     const steps = ['Account', 'Project', 'Review'];
     
     const stepContent = [
-      `
-        <div style="margin-bottom: 24px; text-align: center;">
-          <h3 style="font-size: 20px; color: #f0f6fc; margin-bottom: 8px;">Personal Details</h3>
-          <p style="font-size: 14px; color: #8b949e;">Let's start with some basic information.</p>
+      html`
+        <div class="${styles.stepHeader}">
+          <h3 class="${styles.stepTitle}">Personal Details</h3>
+          <p class="${styles.stepDesc}">Let's start with some basic information.</p>
         </div>
         <div class="${styles.field}">
           <label>Full Name</label>
-          <input type="text" defaultValue="${state.formData.name}" oninput="this.getRootNode().host.updateField('name', this.value)" placeholder="e.g. Alice Johnson">
+          <input type="text" value="${state.formData.name}" data-action="update-field" data-key="name" placeholder="e.g. Alice Johnson">
         </div>
         <div class="${styles.field}">
           <label>Email Address</label>
-          <input type="email" defaultValue="${state.formData.email}" oninput="this.getRootNode().host.updateField('email', this.value)" placeholder="alice@example.com">
+          <input type="email" value="${state.formData.email}" data-action="update-field" data-key="email" placeholder="alice@example.com">
         </div>
       `,
-      `
-        <div style="margin-bottom: 24px; text-align: center;">
-          <h3 style="font-size: 20px; color: #f0f6fc; margin-bottom: 8px;">Project Setup</h3>
-          <p style="font-size: 14px; color: #8b949e;">Tell us more about what you're building.</p>
+      html`
+        <div class="${styles.stepHeader}">
+          <h3 class="${styles.stepTitle}">Project Setup</h3>
+          <p class="${styles.stepDesc}">Tell us more about what you're building.</p>
         </div>
         <div class="${styles.field}">
           <label>Project Name</label>
-          <input type="text" defaultValue="${state.formData.project}" oninput="this.getRootNode().host.updateField('project', this.value)" placeholder="e.g. Quantum Leap">
+          <input type="text" value="${state.formData.project}" data-action="update-field" data-key="project" placeholder="e.g. Quantum Leap">
         </div>
         <div class="${styles.field}">
           <label>Priority</label>
-          <select onchange="this.getRootNode().host.updateField('priority', this.value)">
+          <select data-action="update-field" data-key="priority">
             <option value="Low" ${state.formData.priority === 'Low' ? 'selected' : ''}>Low</option>
             <option value="Medium" ${state.formData.priority === 'Medium' ? 'selected' : ''}>Medium</option>
             <option value="High" ${state.formData.priority === 'High' ? 'selected' : ''}>High</option>
@@ -222,41 +256,41 @@ export const FormWizardView = {
         </div>
         <div class="${styles.field}">
           <label>Description</label>
-          <textarea rows="3" defaultValue="${state.formData.description}" oninput="this.getRootNode().host.updateField('description', this.value)" placeholder="Tell us more about your project...">${state.formData.description}</textarea>
+          <textarea rows="3" data-action="update-field" data-key="description" placeholder="Tell us more about your project...">${state.formData.description}</textarea>
         </div>
       `,
-      `
-        <div style="margin-bottom: 24px; text-align: center;">
-          <h3 style="font-size: 20px; color: #f0f6fc; margin-bottom: 8px;">Confirm Details</h3>
-          <p style="font-size: 14px; color: #8b949e;">Please verify your information before submitting.</p>
+      html`
+        <div class="${styles.stepHeader}">
+          <h3 class="${styles.stepTitle}">Confirm Details</h3>
+          <p class="${styles.stepDesc}">Please verify your information before submitting.</p>
         </div>
-        <div style="background: #0d1117; padding: 24px; border-radius: 20px; border: 1px solid #30363d; font-size: 14px; line-height: 1.8;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #21262d; padding-bottom: 8px;">
-            <span style="color: #8b949e;">Name</span> <span style="color: #f0f6fc; font-weight: 500;">${state.formData.name || 'Not provided'}</span>
+        <div class="${styles.reviewCard}">
+          <div class="${styles.reviewRow}">
+            <span class="${styles.reviewLabel}">Name</span>
+            <span class="${styles.reviewValue}">${state.formData.name || 'Not provided'}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #21262d; padding-bottom: 8px;">
-            <span style="color: #8b949e;">Email</span> <span style="color: #f0f6fc; font-weight: 500;">${state.formData.email || 'Not provided'}</span>
+          <div class="${styles.reviewRow}">
+            <span class="${styles.reviewLabel}">Email</span>
+            <span class="${styles.reviewValue}">${state.formData.email || 'Not provided'}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #21262d; padding-bottom: 8px;">
-            <span style="color: #8b949e;">Project</span> <span style="color: #f0f6fc; font-weight: 500;">${state.formData.project || 'Not provided'}</span>
+          <div class="${styles.reviewRow}">
+            <span class="${styles.reviewLabel}">Project</span>
+            <span class="${styles.reviewValue}">${state.formData.project || 'Not provided'}</span>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #21262d; padding-bottom: 8px;">
-            <span style="color: #8b949e;">Priority</span> <span style="color: #f0f6fc; font-weight: 500;">${state.formData.priority}</span>
+          <div class="${styles.reviewRow}">
+            <span class="${styles.reviewLabel}">Priority</span>
+            <span class="${styles.reviewValue}">${state.formData.priority}</span>
           </div>
-          <div style="margin-top: 16px;">
-            <span style="color: #8b949e; display: block; margin-bottom: 6px;">Description</span>
-            <span style="color: #f0f6fc; font-style: italic;">${state.formData.description || 'No description provided.'}</span>
+          <div class="${styles.reviewDesc}">
+            <span class="${styles.reviewLabel}">Description</span>
+            <span class="${styles.reviewValue}">${state.formData.description || 'No description provided.'}</span>
           </div>
         </div>
       `
     ];
 
-    return `
-      <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        :host { display: block; }
-      </style>
+    return html`
+      <style>:host { display: block; }</style>
       <div class="${styles.container}">
         <div class="${styles.header}">
           <h2 class="${styles.title}">Setup Workspace</h2>
@@ -272,10 +306,10 @@ export const FormWizardView = {
         <div class="${styles.card}">
           ${stepContent[state.step]}
           <div class="${styles.footer}">
-            <button class="${styles.btn} ${styles.btnSecondary}" onclick="this.getRootNode().host.prevStep()" ${state.step === 0 ? 'disabled' : ''}>
+            <button class="${styles.btn} ${styles.btnSecondary}" data-action="prev-step" ${state.step === 0 ? 'disabled' : ''}>
               Back
             </button>
-            <button class="${styles.btn} ${styles.btnPrimary}" onclick="this.getRootNode().host.nextStep()" ${state.isSubmitting ? 'disabled' : ''}>
+            <button class="${styles.btn} ${styles.btnPrimary}" data-action="next-step" ${state.isSubmitting ? 'disabled' : ''}>
               ${state.isSubmitting ? 'Submitting...' : (state.step === steps.length - 1 ? 'Complete' : 'Continue')}
             </button>
           </div>
@@ -283,36 +317,31 @@ export const FormWizardView = {
       </div>
     `;
   },
-  mounted: (el, state) => {
-    (el as any)._draftData = { ...state.formData };
-
-    (el as any).updateField = (field: string, value: string) => {
-      (el as any)._draftData[field] = value;
-    };
-    (el as any).nextStep = async () => {
-      if (state.step < 2) {
-        el.setState((s: any) => ({
-          step: s.step + 1,
-          formData: { ...(el as any)._draftData }
-        }));
-      } else {
-        el.setState(() => ({ isSubmitting: true }));
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        alert('✨ Your workspace has been successfully created!');
-        el.setState(() => ({
-          isSubmitting: false,
-          step: 0,
-          formData: { ...(el as any)._draftData }
-        }));
+  events: {
+    'input [data-action="update-field"]': (e, { setState }) => {
+      const target = e.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+      const key = target.dataset.key;
+      if (key) {
+        setState(s => ({ formData: { ...s.formData, [key]: target.value } }));
       }
-    };
-    (el as any).prevStep = () => {
+    },
+    'click [data-action="prev-step"]': (_e, { state, setState }) => {
       if (state.step > 0) {
-        el.setState((s: any) => ({
-          step: s.step - 1,
-          formData: { ...(el as any)._draftData }
+        setState(s => ({ step: s.step - 1 }));
+      }
+    },
+    'click [data-action="next-step"]': async (_e, { state, setState }) => {
+      if (state.step < 2) {
+        setState(s => ({ step: s.step + 1 }));
+      } else {
+        setState(() => ({ isSubmitting: true }));
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        alert('Your workspace has been successfully created!');
+        setState(() => ({
+          isSubmitting: false,
+          step: 0
         }));
       }
-    };
+    }
   }
-};
+});

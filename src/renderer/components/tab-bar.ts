@@ -1,122 +1,126 @@
-class TabBar extends HTMLElement {
-  private _tabs: Array<{ id: string; label: string }> = [];
-  private _activeId: string | null = null;
+import { defineComponent } from '../core/ui/Component.js';
+import { html } from '../core/ui/Templates.js';
+import { theme } from '../styles/theme.ts';
+import { css } from 'goober';
 
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-    this._render();
-  }
+const styles = {
+  host: css`
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    -webkit-app-region: no-drag;
+  `,
+  bar: css`
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  `,
+  button: css`
+    flex: none;
+    width: 150px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: ${theme.subtitleColor};
+    font-size: 12px;
+    font-weight: 500;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    cursor: pointer;
+    user-select: none;
+    padding: 16px 12px;
+    transition: background 0.12s, color 0.12s;
+    -webkit-app-region: no-drag;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    &:hover {
+      color: ${theme.textColor};
+      background: rgba(255,255,255,0.04);
+    }
+    &.active {
+      color: #fafafa;
+      background: rgba(255,255,255,0.07);
+    }
+  `,
+  label: css`
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  `,
+  close: css`
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    font-size: 14px;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.5;
+    transition: opacity 0.1s, background 0.1s;
+    margin: 0 -2px;
+    &:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+  `
+};
 
-  static get observedAttributes() { return ['tabs', 'active']; }
-
-  attributeChangedCallback(name: string, _old: string | null, val: string | null) {
-    if (val === null) return;
-    if (name === 'tabs') this._tabs = JSON.parse(val);
-    if (name === 'active') this._activeId = val;
-    this._render();
-  }
-
-  private _render() {
-    if (!this.shadowRoot) return;
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host {
-          display: flex;
-          min-width: 0;
-          flex: 1;
-          -webkit-app-region: no-drag;
-        }
-        .bar {
-          display: flex;
-          min-width: 0;
-          flex: 1;
-          overflow-x: auto;
-          scrollbar-width: none;
-        }
-        .bar::-webkit-scrollbar { display: none; }
-        button {
-          flex: none;
-          width: 150px;
-          height: 100%;
-          border: none;
-          background: transparent;
-          color: #71717a;
-          font-size: 12px;
-          font-weight: 500;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-          cursor: pointer;
-          user-select: none;
-          padding: 16px 12px;
-          transition: background 0.12s, color 0.12s;
-          -webkit-app-region: no-drag;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        button:hover {
-          color: #d4d4d8;
-          background: rgba(255,255,255,0.04);
-        }
-        button.active {
-          color: #fafafa;
-          background: rgba(255,255,255,0.07);
-        }
-        .label {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          min-width: 0;
-        }
-        .close {
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 16px;
-          height: 16px;
-          border-radius: 3px;
-          font-size: 14px;
-          line-height: 1;
-          color: inherit;
-          opacity: 0.5;
-          transition: opacity 0.1s, background 0.1s;
-          margin: 0 -2px;
-        }
-        .close:hover { opacity: 1; background: rgba(255,255,255,0.1); }
-      </style>
-      <div class="bar">
-        ${this._tabs.map(t => `
-          <button class="${t.id === this._activeId ? 'active' : ''}" data-id="${t.id}">
-            <span class="label">${t.label}</span>
-            ${t.id !== 'home' ? `<span class="close" data-close="${t.id}">&times;</span>` : ''}
-          </button>
-        `).join('')}
-      </div>
-    `;
-
-    this.shadowRoot!.querySelectorAll('button').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        if (target.dataset.close) {
-          this.dispatchEvent(new CustomEvent('tab-close', {
-            detail: target.dataset.close,
-            bubbles: true,
-            composed: true,
-          }));
-          return;
-        }
-        const id = (el as HTMLElement).dataset.id;
-        if (id) {
-          this.dispatchEvent(new CustomEvent('tab-click', {
-            detail: id,
-            bubbles: true,
-            composed: true,
-          }));
-        }
-      });
+export const TabBar = defineComponent({
+  name: 'tab-bar',
+  initialState: {
+    tabs: [] as Array<{ id: string; label: string }>,
+    activeId: null as string | null,
+  },
+  observedAttributes: ['tabs', 'active'],
+  render: (state) => html`
+    <div class="${styles.bar}">
+      ${state.tabs.map((t: any) => `
+        <button class="${styles.button} ${t.id === state.activeId ? 'active' : ''}" data-id="${t.id}">
+          <span class="${styles.label}">${t.label}</span>
+          ${t.id !== 'home' ? `<span class="${styles.close}" data-close="${t.id}">&times;</span>` : ''}
+        </button>
+      `).join('')}
+    </div>
+  `,
+  events: {
+    'click button': (e, _ctx) => {
+      const target = e.currentTarget as HTMLElement;
+      const closeBtn = target.closest(`.${styles.close}`);
+      
+      if (closeBtn) {
+        const id = closeBtn.getAttribute('data-close');
+        // Accessing via dispatchEvent on the component instance
+        (target.getRootNode() as any).dispatchEvent(new CustomEvent('tab-close', {
+          detail: id,
+          bubbles: true,
+          composed: true,
+        }));
+        return;
+      }
+      
+      const btn = target.closest('button') as HTMLElement;
+      const id = btn?.dataset.id;
+      if (id) {
+        (target.getRootNode() as any).dispatchEvent(new CustomEvent('tab-click', {
+          detail: id,
+          bubbles: true,
+          composed: true,
+        }));
+      }
+    }
+  },
+  mounted: (el: any) => {
+    const observer = new MutationObserver(() => {
+      const tabs = el.getAttribute('tabs');
+      const active = el.getAttribute('active');
+      if (tabs) el.setState({ tabs: JSON.parse(tabs) });
+      if (active) el.setState({ activeId: active });
     });
+    observer.observe(el, { attributes: true });
+    (el as any)._cleanups.push(() => observer.disconnect());
   }
-}
-
-customElements.define('tab-bar', TabBar);
+});

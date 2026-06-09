@@ -5,6 +5,9 @@ use tracing_wasm::{WASMLayerConfigBuilder, WASMLayer};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
 
+mod utils;
+mod state;
+
 /// Intermediate Representation (IR) Command used for communication between TS and Rust.
 /// Encapsulated as a tagged union to support various operation types.
 #[derive(Deserialize, Debug, PartialEq)]

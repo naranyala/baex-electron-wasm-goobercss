@@ -16,5 +16,7 @@ log = "0.4.32"
 tracing = "0.1.44"
 tracing-wasm = "0.2.1"
 tracing-subscriber = { version = "0.3.23", features = ["registry", "fmt"] }
+rand = "0.8"
+getrandom = { version = "0.2", features = ["js"] }
 
 

@@ -1,4 +1,7 @@
 import { css } from 'goober';
+import { defineComponent } from '../../core/ui/Component.js';
+import { html } from '../../core/ui/Templates.js';
+import { theme } from '../../styles/theme.ts';
 
 const styles = {
   container: css`
@@ -6,20 +9,20 @@ const styles = {
     font-family: 'Inter', sans-serif;
     max-width: 900px;
     margin: 0 auto;
-    color: #c9d1d9;
+    color: ${theme.subtitleColor};
   `,
   title: css`
     text-align: center;
     margin-bottom: 32px;
     font-size: 24px;
     font-weight: 700;
-    color: #f0f6fc;
+    color: ${theme.textColor};
   `,
   tableWrapper: css`
     overflow-x: auto;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    background: #161b22;
+    border: 1px solid ${theme.borderColor};
+    border-radius: 8px;
+    background: ${theme.backgroundColor};
   `,
   table: css`
     width: 100%;
@@ -29,43 +32,37 @@ const styles = {
   `,
   th: css`
     padding: 12px 16px;
-    background: #21262d;
-    color: #8b949e;
+    background: ${theme.backgroundColor};
+    color: ${theme.subtitleColor};
     font-weight: 600;
     cursor: pointer;
     user-select: none;
     transition: background 0.2s, color 0.2s;
-    border-bottom: 2px solid #30363d;
+    border-bottom: 2px solid ${theme.borderColor};
     &:hover {
-      background: #30363d;
-      color: #f0f6fc;
+      background: ${theme.hoverColor};
+      color: ${theme.textColor};
     }
   `,
   td: css`
     padding: 12px 16px;
-    border-bottom: 1px solid #30363d;
-    color: #c9d1d9;
+    border-bottom: 1px solid ${theme.borderColor};
+    color: ${theme.subtitleColor};
     &:last-child { border-bottom: none; }
   `,
   sortIcon: css`
     display: inline-block;
     margin-left: 8px;
     font-size: 12px;
-    color: #58a6ff;
+    color: ${theme.accentColor};
   `
 };
 
-interface DataTableState {
-  sortKey: string | null;
-  sortDir: 'asc' | 'desc' | null;
-  data: any[];
-}
-
-export const DataTableView = {
+export const DataTableView = defineComponent({
   name: 'data-table-view',
   initialState: {
-    sortKey: null,
-    sortDir: null,
+    sortKey: null as string | null,
+    sortDir: null as 'asc' | 'desc' | null,
     data: [
       { id: 1, name: 'Alice Johnson', role: 'Engineer', level: 4, joinDate: '2021-03-12' },
       { id: 2, name: 'Bob Smith', role: 'Designer', level: 3, joinDate: '2022-01-20' },
@@ -86,15 +83,15 @@ export const DataTableView = {
     const sortedData = [...state.data];
     if (state.sortKey && state.sortDir) {
       sortedData.sort((a, b) => {
-        const valA = a[state.sortKey!];
-        const valB = b[state.sortKey!];
+        const valA = (a as any)[state.sortKey!];
+        const valB = (b as any)[state.sortKey!];
         if (valA < valB) return state.sortDir === 'asc' ? -1 : 1;
         if (valA > valB) return state.sortDir === 'asc' ? 1 : -1;
         return 0;
       });
     }
 
-    return `
+    return html`
       <style>:host { display: block; }</style>
       <div class="${styles.container}">
         <h2 class="${styles.title}">Reactive Data Table</h2>
@@ -103,7 +100,7 @@ export const DataTableView = {
             <thead>
               <tr>
                 ${columns.map(col => `
-                  <th class="${styles.th}" onclick="this.getRootNode().host.toggleSort('${col.key}')">
+                  <th class="${styles.th}" data-action="toggle-sort" data-key="${col.key}">
                     ${col.label}
                     <span class="${styles.sortIcon}">
                       ${state.sortKey === col.key ? (state.sortDir === 'asc' ? '▲' : state.sortDir === 'desc' ? '▼' : '↕') : '↕'}
@@ -115,7 +112,7 @@ export const DataTableView = {
             <tbody>
               ${sortedData.map(row => `
                 <tr>
-                  ${columns.map(col => `<td class="${styles.td}">${row[col.key]}</td>`).join('')}
+                  ${columns.map(col => `<td class="${styles.td}">${(row as any)[col.key]}</td>`).join('')}
                 </tr>
               `).join('')}
             </tbody>
@@ -124,15 +121,19 @@ export const DataTableView = {
       </div>
     `;
   },
-  mounted: (el, state) => {
-    (el as any).toggleSort = (key: string) => {
-      el.setState((s: any) => {
+  events: {
+    'click [data-action="toggle-sort"]': (e, { setState }) => {
+      const target = e.currentTarget as HTMLElement;
+      const key = target.getAttribute('data-key');
+      if (!key) return;
+      
+      setState(s => {
         if (s.sortKey === key) {
           const nextDir = s.sortDir === 'asc' ? 'desc' : s.sortDir === 'desc' ? null : 'asc';
-          return { sortDir: nextDir };
+          return { sortKey: key, sortDir: nextDir } as any;
         }
-        return { sortKey: key, sortDir: 'asc' };
+        return { sortKey: key, sortDir: 'asc' } as any;
       });
-    };
+    }
   }
-};
+});

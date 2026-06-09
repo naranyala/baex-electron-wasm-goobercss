@@ -1,25 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FrontendDatabase } from '../db/FrontendDatabase';
 
-// Mocking the sql.js module
-vi.mock('https://cdn.jsdelivr.net/npm/@sqlite.org/sqlite-wasm@3.53.0-build1/sqlite-wasm/jswasm/sqlite3.mjs', () => {
+// Mocking the @sqlite.org/sqlite-wasm module
+vi.mock('@sqlite.org/sqlite-wasm', () => {
   return {
-    default: {
-      opfs: {
-        open: vi.fn().mockImplementation(() => ({
-          exec: vi.fn(),
-          run: vi.fn(),
-          close: vi.fn(),
-        })),
-      },
+    default: vi.fn().mockResolvedValue({
       oo1: {
+        OpfsDb: class {
+          exec = vi.fn();
+          run = vi.fn();
+          close = vi.fn();
+        },
         DB: class {
           exec = vi.fn();
           run = vi.fn();
           close = vi.fn();
         }
       }
-    }
+    })
   };
 });
 

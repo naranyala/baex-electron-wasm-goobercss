@@ -1,4 +1,9 @@
 import { css } from 'goober';
+import { defineComponent } from '../../core/ui/Component.js';
+import { html } from '../../core/ui/Templates.js';
+import { createEffect } from '../../core/reactivity/Reactivity.js';
+import { createPortal } from '../../core/ui/Primitives.js';
+import { theme } from '../../styles/theme.ts';
 
 const styles = {
   container: css`
@@ -8,47 +13,38 @@ const styles = {
     justify-content: center;
     height: 80vh;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: #c9d1d9;
+    color: ${theme.subtitleColor};
   `,
   trigger: css`
     padding: 14px 28px;
-    background: linear-gradient(135deg, #58a6ff 0%, #3b82f6 100%);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: #fff;
     border: none;
-    border-radius: 16px;
+    border-radius: 12px;
     font-weight: 600;
     cursor: pointer;
     font-size: 16px;
-    box-shadow: 0 4px 15px rgba(88, 166, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    &:hover { 
+    &:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(88, 166, 255, 0.4);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
       filter: brightness(1.1);
     }
     &:active { transform: translateY(0); }
   `,
   overlay: css`
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(13, 17, 23, 0.7);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    display: flex;
-    align-items: flex-end;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(11, 14, 20, 0.7); backdrop-filter: blur(8px);
+    z-index: 1000; display: flex; align-items: flex-end;
     animation: fadeIn 0.3s ease-out;
   `,
   drawer: css`
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    background: #161b22;
-    border-top-left-radius: 32px;
-    border-top-right-radius: 32px;
-    border: 1px solid #30363d;
+    width: 100%; max-width: 600px; margin: 0 auto;
+    background: ${theme.backgroundColor};
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border: 1px solid ${theme.borderColor};
     border-bottom: none;
     padding: 0 24px 40px 24px;
     box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
@@ -56,82 +52,77 @@ const styles = {
     position: relative;
   `,
   handle: css`
-    width: 48px;
-    height: 5px;
-    background: #30363d;
-    border-radius: 10px;
-    margin: 16px auto 32px auto;
-    cursor: pointer;
-    transition: all 0.2s;
-    &:hover { background: #58a6ff; width: 60px; }
+    width: 48px; height: 5px; background: ${theme.borderColor};
+    border-radius: 10px; margin: 16px auto 32px auto;
+    cursor: pointer; transition: all 0.2s;
+    &:hover { background: ${theme.accentColor}; width: 60px; }
   `,
   title: css`
-    font-size: 20px;
-    font-weight: 700;
-    color: #f0f6fc;
-    text-align: center;
-    margin-bottom: 32px;
-    letter-spacing: -0.02em;
+    font-size: 20px; font-weight: 700; color: ${theme.textColor};
+    text-align: center; margin-bottom: 32px; letter-spacing: -0.02em;
   `,
   grid: css`
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 16px; margin-bottom: 20px;
   `,
   card: css`
-    background: #0d1117;
-    border: 1px solid #30363d;
-    border-radius: 20px;
-    padding: 24px 16px;
-    text-align: center;
-    cursor: pointer;
+    background: ${theme.backgroundColor}; border: 1px solid ${theme.borderColor};
+    border-radius: 8px; padding: 24px 16px;
+    text-align: center; cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     &:hover {
-      border-color: #58a6ff;
-      background: #1c2128;
-      transform: translateY(-6px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+      border-color: ${theme.accentColor}; background: ${theme.hoverColor};
+      transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.4);
     }
-    &:hover .cardIcon { transform: scale(1.2); color: #58a6ff; }
-    &:hover .cardLabel { color: #fff; }
   `,
   cardIcon: css`
-    font-size: 28px;
-    margin-bottom: 12px;
-    display: block;
-    transition: all 0.3s ease;
-    color: #8b949e;
+    font-size: 28px; margin-bottom: 12px; display: block;
+    transition: all 0.3s ease; color: ${theme.subtitleColor};
+    .card:hover & { transform: scale(1.2); color: ${theme.accentColor}; }
   `,
   cardLabel: css`
-    font-size: 14px;
-    font-weight: 500;
-    color: #c9d1d9;
+    font-size: 14px; font-weight: 500; color: ${theme.subtitleColor};
     transition: color 0.3s;
+    .card:hover & { color: ${theme.textColor}; }
   `
 };
 
-export const DrawerView = {
+export const DrawerView = defineComponent({
   name: 'drawer-view',
   initialState: {
     isOpen: false
   },
-  render: (state: any) => {
-    return `
-      <style>
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        :host { display: block; }
-      </style>
-      <div class="${styles.container}">
-        <button class="${styles.trigger}" data-action="toggle-drawer">
-          Open System Menu
-        </button>
-        
-        ${state.isOpen ? `
-          <div class="${styles.overlay}" data-action="close-backdrop">
-            <div class="${styles.drawer}" data-action="no-close">
-              <div class="${styles.handle}" data-action="toggle-drawer"></div>
+  render: (_state) => html`
+    <style>
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+      :host { display: block; }
+    </style>
+    <div class="${styles.container}">
+      <button class="${styles.trigger}" data-action="toggle-drawer">
+        Open System Menu
+      </button>
+    </div>
+  `,
+  events: {
+    'click [data-action="toggle-drawer"]': (_e, { setState }) => {
+      setState(s => ({ isOpen: !s.isOpen }));
+    },
+  },
+  mounted: (el, _state) => {
+    const _el = el as any;
+    const updatePortal = () => {
+      const existing = document.getElementById('exba-drawer-portal');
+      if (existing) existing.remove();
+      
+      if (_el.state.isOpen) {
+        const portalRoot = document.createElement('div');
+        portalRoot.id = 'exba-drawer-portal';
+        portalRoot.innerHTML = `
+          <div class="${styles.overlay}" id="drawer-overlay">
+            <div class="${styles.drawer}">
+              <div class="${styles.handle}" id="drawer-handle"></div>
               <h3 class="${styles.title}">Quick Actions</h3>
               <div class="${styles.grid}">
                 ${[
@@ -152,31 +143,40 @@ export const DrawerView = {
               </div>
             </div>
           </div>
-        ` : ''}
-      </div>
-    `;
-  },
-  events: {
-    'click [data-action="toggle-drawer"]': (_e: Event, { setState }: any) => {
-      setState((s: any) => ({ isOpen: !s.isOpen }));
-    },
-    'click [data-action="close-backdrop"]': (e: Event, { setState }: any) => {
-      if ((e.target as HTMLElement).dataset.action === 'close-backdrop') {
-        setState(() => ({ isOpen: false }));
+        `;
+        createPortal(document.body, portalRoot.innerHTML);
       }
-    },
-    'click [data-action="handle-action"]': (e: Event, { setState }: any) => {
-      alert(`Action Triggered: ${(e.target as HTMLElement).closest('[data-label]') && ((e.target as HTMLElement).closest('[data-label]') as HTMLElement).dataset.label}`);
-      setState(() => ({ isOpen: false }));
-    },
-  },
-  mounted: (el: any, state: any) => {
+    };
+
+    createEffect(() => {
+      if (_el.state.isOpen !== undefined) {
+        updatePortal();
+      }
+    });
+
+    const handlePortalClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.id === 'drawer-overlay' || target.id === 'drawer-handle') {
+        _el.setState(() => ({ isOpen: false }));
+      } else {
+        const card = target.closest('.card');
+        if (card) {
+          const label = card.getAttribute('data-label');
+          alert(`Action Triggered: ${label}`);
+          _el.setState(() => ({ isOpen: false }));
+        }
+      }
+    };
+
+    document.addEventListener('click', handlePortalClick);
+    _el._cleanups.push(() => document.removeEventListener('click', handlePortalClick));
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && state.isOpen) {
-        el.setState(() => ({ isOpen: false }));
+      if (e.key === 'Escape' && _el.state.isOpen) {
+        _el.setState(() => ({ isOpen: false }));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    el._cleanups.push(() => window.removeEventListener('keydown', handleKeyDown));
+    _el._cleanups.push(() => window.removeEventListener('keydown', handleKeyDown));
   }
-};
+});

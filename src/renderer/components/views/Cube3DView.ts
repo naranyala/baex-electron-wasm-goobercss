@@ -1,4 +1,7 @@
 import { css } from 'goober';
+import { defineComponent } from '../../core/ui/Component.js';
+import { html } from '../../core/ui/Templates.js';
+import { theme } from '../../styles/theme.ts';
 
 const styles = {
   container: css`
@@ -7,13 +10,13 @@ const styles = {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: #c9d1d9;
+    color: ${theme.subtitleColor};
     font-family: 'Inter', sans-serif;
     min-height: 80vh;
   `,
   canvas: css`
     background: #0d1117;
-    border: 1px solid #30363d;
+    border: 1px solid ${theme.borderColor};
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     cursor: move;
@@ -21,33 +24,31 @@ const styles = {
   info: css`
     margin-top: 20px;
     text-align: center;
-    color: #8b949e;
+    color: ${theme.subtitleColor};
     font-size: 14px;
     line-height: 1.6;
   `
 };
 
-export const Cube3DView = {
+export const Cube3DView = defineComponent({
   name: 'cube-3d-view',
   initialState: {
     rotation: { x: 0, y: 0, z: 0 },
     isRotating: true
   },
-  render: (state) => {
-    return `
-      <style>:host { display: block; }</style>
-      <div class="${styles.container}">
-        <h2 style="margin-bottom: 20px; color: #f0f6fc;">Linear Algebra: 3D Projection</h2>
-        <canvas id="cube-canvas" class="${styles.canvas}" width="600" height="600"></canvas>
-        <div class="${styles.info}">
-          The cube is rendered using a basic 3D-to-2D orthographic projection.<br/>
-          Vertices are rotated using 3D rotation matrices and projected onto the 2D screen.
-        </div>
+  render: () => html`
+    <style>:host { display: block; }</style>
+    <div class="${styles.container}">
+      <h2 style="margin-bottom: 20px; color: ${theme.titleColor};">Linear Algebra: 3D Projection</h2>
+      <canvas id="cube-canvas" class="${styles.canvas}" width="600" height="600"></canvas>
+      <div class="${styles.info}">
+        The cube is rendered using a basic 3D-to-2D orthographic projection.<br/>
+        Vertices are rotated using 3D rotation matrices and projected onto the 2D screen.
       </div>
-    `;
-  },
-  mounted: (el, state) => {
-    const canvas = el.shadowRoot?.getElementById('cube-canvas') as HTMLCanvasElement;
+    </div>
+  `,
+  mounted: (el) => {
+    const canvas = el.shadowRoot?.getElementById('cube-canvas') as HTMLCanvasElement | null;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -68,8 +69,7 @@ export const Cube3DView = {
     const offset = { x: canvas.width / 2, y: canvas.height / 2 };
 
     function project(v: number[]) {
-      const x = v[0], y = v[1], z = v[2];
-      // Simple orthographic projection
+      const x = v[0], y = v[1];
       return {
         x: x * scale + offset.x,
         y: y * scale + offset.y
@@ -92,13 +92,11 @@ export const Cube3DView = {
     }
 
     function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
       
-      if (state.isRotating) {
-        angleX += 0.01;
-        angleY += 0.015;
-        angleZ += 0.005;
-      }
+      angleX += 0.01;
+      angleY += 0.015;
+      angleZ += 0.005;
 
       const transformed = vertices.map(v => {
         let rv = rotateX(v, angleX);
@@ -107,20 +105,20 @@ export const Cube3DView = {
         return project(rv);
       });
 
-      ctx.strokeStyle = '#58a6ff';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
+      ctx!.strokeStyle = '#58a6ff';
+      ctx!.lineWidth = 2;
+      ctx!.beginPath();
       edges.forEach(([start, end]) => {
         const p1 = transformed[start];
         const p2 = transformed[end];
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
+        ctx!.moveTo(p1.x, p1.y);
+        ctx!.lineTo(p2.x, p2.y);
       });
-      ctx.stroke();
+      ctx!.stroke();
 
       requestAnimationFrame(draw);
     }
 
     draw();
   }
-};
+});

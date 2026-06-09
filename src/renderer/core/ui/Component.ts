@@ -1,13 +1,14 @@
 import { createSignal } from '../reactivity/Reactivity';
 import { BaseComponent } from './BaseComponent';
-import { ComponentDefinition } from '../bridge/types';
+import { ComponentDefinition, EventContext } from '../bridge/types';
+import { ComponentValidator } from './ComponentValidator';
 
-export function defineComponent<S extends object>(config: ComponentDefinition & { initialState: S }) {
-  const { name, initialState, render, mounted, events } = config;
+export function defineComponent<S extends object>(config: ComponentDefinition<S>) {
+  ComponentValidator.validate(config);
+  const { name, initialState, render, mounted, events, observedAttributes = [] } = config;
 
-  customElements.define(name!, class extends BaseComponent {
+  const ComponentClass = class extends BaseComponent {
     private stateSignal = createSignal(initialState);
-    private _eventsAttached = false;
 
     get state(): S {
       return this.stateSignal.get();
@@ -19,22 +20,21 @@ export function defineComponent<S extends object>(config: ComponentDefinition & 
       this.stateSignal.set({ ...current, ...patch });
     }
 
-    constructor() {
-      super(config);
+    static get observedAttributes() {
+      return observedAttributes;
     }
 
     render() {
-      return render!(this.state, {
+      const context: EventContext<S> = {
+        state: this.state,
         setState: this.setState.bind(this),
-      });
+      };
+      return render!(this.state, this.props, context);
     }
 
     connectedCallback() {
       super.connectedCallback();
       this.wireEvents();
-      if (mounted) {
-        mounted(this as any, this.state);
-      }
     }
 
     private wireEvents() {
@@ -45,7 +45,8 @@ export function defineComponent<S extends object>(config: ComponentDefinition & 
         const eventType = descriptor.slice(0, idx);
         const selector = descriptor.slice(idx + 1).trim();
         this.shadow.addEventListener(eventType, (e: Event) => {
-          const target = (e.target as HTMLElement).closest(selector);
+          const path = e.composedPath();
+          const target = (path[0] as HTMLElement).closest(selector);
           if (target && this.shadow.contains(target)) {
             handler(e, {
               state: this.state,
@@ -55,7 +56,11 @@ export function defineComponent<S extends object>(config: ComponentDefinition & 
         });
       });
     }
-  });
+  };
+
+  if (!customElements.get(name!)) {
+    customElements.define(name!, ComponentClass);
+  }
 
   return config;
 }

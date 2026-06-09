@@ -1,4 +1,7 @@
 import { css } from 'goober';
+import { defineComponent } from '../../core/ui/Component.js';
+import { html } from '../../core/ui/Templates.js';
+import { theme } from '../../styles/theme.ts';
 
 const styles = {
   container: css`
@@ -6,8 +9,9 @@ const styles = {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     max-width: 800px;
     margin: 0 auto;
-    color: #c9d1d9;
+    color: ${theme.subtitleColor};
     animation: fadeIn 0.5s ease-out;
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   `,
   header: css`
     text-align: center;
@@ -16,7 +20,7 @@ const styles = {
   title: css`
     font-size: 32px;
     font-weight: 800;
-    color: #f0f6fc;
+    color: ${theme.titleColor};
     margin-bottom: 12px;
     letter-spacing: -0.03em;
     background: linear-gradient(135deg, #fff 0%, #8b949e 100%);
@@ -25,14 +29,14 @@ const styles = {
   `,
   subtitle: css`
     font-size: 16px;
-    color: #8b949e;
+    color: ${theme.subtitleColor};
     max-width: 500px;
     margin: 0 auto;
     line-height: 1.5;
   `,
   treeWrapper: css`
-    background: #161b22;
-    border: 1px solid #30363d;
+    background: ${theme.backgroundColor};
+    border: 1px solid ${theme.borderColor};
     border-radius: 20px;
     padding: 32px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
@@ -55,10 +59,10 @@ const styles = {
     border-radius: 8px;
     transition: all 0.2s ease;
     user-select: none;
-    color: #c9d1d9;
+    color: ${theme.textColor};
     font-size: 14px;
     &:hover { 
-      background: #21262d; 
+      background: ${theme.hoverColor}; 
       color: #fff;
       transform: translateX(4px);
     }
@@ -70,7 +74,7 @@ const styles = {
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #58a6ff;
+    color: ${theme.accentColor};
     transition: transform 0.2s ease;
     &.open { transform: rotate(90deg); }
   `,
@@ -89,7 +93,7 @@ const styles = {
       top: 0;
       bottom: 0;
       width: 1px;
-      background: #30363d;
+      background: ${theme.borderColor};
     }
   `
 };
@@ -106,7 +110,7 @@ interface TreeState {
   data: TreeNode[];
 }
 
-export const TreeViewView = {
+export const TreeViewView = defineComponent({
   name: 'tree-view',
   initialState: {
     expanded: { '1': true, '1.1': true },
@@ -135,13 +139,13 @@ export const TreeViewView = {
   },
   render: (state) => {
     const renderNode = (node: TreeNode): string => {
-      const isExpanded = !!state.expanded[node.id];
+      const isExpanded = !!(state as any).expanded[node.id];
       const hasChildren = !!node.children && node.children.length > 0;
       const icon = node.type === 'folder' ? '📁' : '📄';
 
       return `
         <li class="${styles.treeItem}">
-          <div class="${styles.nodeHeader}" onclick="this.getRootNode().host.toggleNode('${node.id}')">
+          <div class="${styles.nodeHeader}" data-action="toggle-node" data-id="${node.id}">
             <span class="${styles.toggle} ${isExpanded ? 'open' : ''}">${hasChildren ? '▹' : ''}</span>
             <span class="${styles.nodeIcon}">${icon}</span>
             ${node.label}
@@ -155,11 +159,8 @@ export const TreeViewView = {
       `;
     };
 
-    return `
-      <style>
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        :host { display: block; }
-      </style>
+    return html`
+      <style>:host { display: block; }</style>
       <div class="${styles.container}">
         <div class="${styles.header}">
           <h2 class="${styles.title}">Project Explorer</h2>
@@ -173,11 +174,15 @@ export const TreeViewView = {
       </div>
     `;
   },
-  mounted: (el, state) => {
-    (el as any).toggleNode = (id: string) => {
-      el.setState((s: any) => ({
-        expanded: { ...s.expanded, [id]: !s.expanded[id] }
+  events: {
+    'click [data-action="toggle-node"]': (e, { setState }) => {
+      const target = e.currentTarget as HTMLElement;
+      const id = target.getAttribute('data-id');
+      if (!id) return;
+      
+      setState(s => ({
+        expanded: { ...(s as any).expanded, [id]: !(s as any).expanded[id] }
       }));
-    };
+    }
   }
-};
+});

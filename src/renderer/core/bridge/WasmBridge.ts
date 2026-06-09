@@ -1,18 +1,14 @@
 import { workerBridge } from './WorkerBridge';
 import { IRResult, BridgeInterface } from './types';
+import { IRTransformer } from './IRTransformer';
 
 async function bridgeRaw(type: string, payload: any): Promise<any> {
     try {
-        const rawResult: IRResult = await workerBridge.execute(type, payload);
-
-        if (rawResult.type === 'Error') {
-            console.error(`[EXBA Bridge] Anomaly: ${rawResult.payload}`);
-            throw new Error(rawResult.payload as string);
-        }
-
-        return rawResult.payload;
+        const hlir = IRTransformer.toHLIR(type, payload);
+        const rawResult: IRResult = await workerBridge.execute(hlir.type, hlir.payload);
+        return IRTransformer.resolveResult(rawResult);
     } catch (e: any) {
-        console.error(`[EXBA Bridge] Worker Error: ${e.message}`);
+        console.error(`[EXBA Bridge] Error: ${e.message}`);
         throw e;
     }
 }

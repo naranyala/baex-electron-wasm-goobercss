@@ -1,4 +1,4 @@
-import { IRCommand } from './types';
+import { HLIRCommand } from './types';
 
 /**
  * Manages the lifecycle and communication with the WASM Worker.
@@ -41,7 +41,7 @@ export class WorkerBridge {
    */
   async execute(type: string, payload: any): Promise<any> {
     const id = this.requestId++;
-    const command: IRCommand = { type, payload };
+    const command: HLIRCommand = { type, payload } as any;
     const commandJson = JSON.stringify(command);
     
     const encoder = new TextEncoder();

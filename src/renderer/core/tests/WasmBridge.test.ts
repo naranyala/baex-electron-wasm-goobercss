@@ -1,44 +1,36 @@
-import { describe, it, expect, vi } from 'vitest';
-
-class MockWorker {
-  onmessage: ((e: MessageEvent) => void) | null = null;
-  postMessage = vi.fn((msg: any) => {
-    setTimeout(() => {
-      if (this.onmessage) {
-        this.onmessage({
-          data: { id: msg.id, result: { type: 'Number', payload: 30 }, status: 'success' }
-        } as any);
-      }
-    }, 0);
-  });
-  terminate = vi.fn();
-}
-
-vi.stubGlobal('Worker', MockWorker);
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { workerBridge } from '../bridge/WorkerBridge';
 
 // Mock the wasm module
 vi.mock('../../../../core/rust/pkg/wasm_rust', () => ({
-  default: vi.fn(),
+  default: vi.fn().mockResolvedValue(undefined),
   process_ir: vi.fn(),
 }));
 
-// Import WasmBridge AFTER the mock
 import { WasmBridge } from '../bridge/WasmBridge';
 import * as wasm from '../../../../core/rust/pkg/wasm_rust';
 
 describe('WasmBridge', () => {
-  it('should call process_ir with correct JSON for Add', async () => {
-    (wasm.process_ir as any).mockResolvedValue({ type: 'Number', payload: 30 });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should call workerBridge.execute for Add', async () => {
+    // Mock the worker response through the workerBridge instance
+    const executeSpy = vi.spyOn(workerBridge, 'execute').mockResolvedValue({ 
+      type: 'Number', 
+      payload: 30 
+    });
     
     const result = await WasmBridge.compute.add(10, 20);
     
-    expect(wasm.process_ir).toHaveBeenCalledWith(JSON.stringify({ type: 'Add', payload: { a: 10, b: 20 } }));
+    expect(executeSpy).toHaveBeenCalledWith('Add', { a: 10, b: 20 });
     expect(result).toBe(30);
   });
 
-  it('should throw error on Anomaly', async () => {
-    (wasm.process_ir as any).mockResolvedValue({ type: 'Error', payload: 'test error' });
+  it('should throw error when bridgeRaw fails', async () => {
+    vi.spyOn(workerBridge, 'execute').mockRejectedValue(new Error('Bridge failure'));
     
-    await expect(WasmBridge.compute.add(10, 20)).rejects.toThrow('test error');
+    await expect(WasmBridge.compute.add(10, 20)).rejects.toThrow('Bridge failure');
   });
 });
