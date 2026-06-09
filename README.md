@@ -1,5 +1,7 @@
 # EXBA: Extended Browser API
 
+![x-sword-humanoid-bee](./x-sword-humanoid-bee.png)
+
 EXBA is a framework for building browser-native Web Components powered by
 Rust/WASM computation and fine-grained signal reactivity. The name stands for
 Extended Browser API -- the idea that the browser's native capabilities
