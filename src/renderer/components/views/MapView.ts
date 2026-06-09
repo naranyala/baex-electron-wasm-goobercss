@@ -48,7 +48,7 @@ export const MapView = {
       attribution: '© OpenStreetMap'
     }).addTo(map);
     L.marker(state.center as [number, number]).addTo(map)
-      .bindPopup('BAEX Spatial Node')
+      .bindPopup('EXBA Spatial Node')
       .openPopup();
     
     setTimeout(() => map.invalidateSize(), 100);

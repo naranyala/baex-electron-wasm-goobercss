@@ -1,4 +1,4 @@
-import { BaseComponent } from '../../src/renderer/framework/BaseComponent';
+import { BaseComponent } from '../../src/renderer/core/ui/BaseComponent';
 import { css, html } from 'goober';
 
 const styles = css`
@@ -18,11 +18,11 @@ export class BasicComponent extends BaseComponent {
     return `
       <style>${styles}</style>
       <div class="card">
-        <h1>Hello BAEX!</h1>
+        <h1>Hello EXBA!</h1>
         <p>This is a basic component extending BaseComponent.</p>
       </div>
     `;
   }
 }
 
-customElements.define('baex-basic-component', BasicComponent);
+customElements.define('exba-basic-component', BasicComponent);

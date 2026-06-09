@@ -1,32 +1,62 @@
 import { defineConfig } from 'vite'
 import path from 'node:path'
-import electron from 'vite-plugin-electron/simple'
+import fs from 'node:fs'
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    electron({
-      main: {
-         // Shortcut of `build.lib.entry`.
-         entry: 'src/main/main.ts',
-       },
-       preload: {
-         // Shortcut of `build.rollupOptions.input`.
-         // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
-         input: path.join(__dirname, 'src/main/preload.ts'),
-       },
+function wasmServe() {
+  return {
+    name: 'wasm-serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.endsWith('.wasm')) {
+          // Resolve relative to project root or node_modules
+          const candidates = [
+            path.join(process.cwd(), req.url),
+            path.join(process.cwd(), 'node_modules', req.url),
+          ]
+          // Also handle scoped packages like /@sqlite.org/sqlite-wasm/dist/sqlite3.wasm
+          const urlPath = req.url.replace(/^\//, '')
+          candidates.push(path.join(process.cwd(), 'node_modules', urlPath))
 
-      // Ployfill the Electron and Node.js API for Renderer process.
-      // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
-      // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
-      renderer: process.env.NODE_ENV === 'test'
-        // https://github.com/electron-vite/vite-plugin-electron-renderer/issues/78#issuecomment-2053600808
-        ? undefined
-        : {},
-    }),
-  ],
-  test: {
-    environment: 'jsdom',
-    globals: true,
-  },
+          for (const filePath of candidates) {
+            if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+              res.setHeader('Content-Type', 'application/wasm')
+              fs.createReadStream(filePath).pipe(res)
+              return
+            }
+          }
+        }
+        next()
+      })
+    },
+  }
+}
+
+export default defineConfig(async () => {
+  const plugins = [wasmServe()]
+
+  if (!process.env.VITE_NO_ELECTRON) {
+    const { default: electron } = await import('vite-plugin-electron/simple')
+    plugins.push(
+      electron({
+        main: {
+          entry: 'src/main/main.ts',
+        },
+        preload: {
+          input: path.join(__dirname, 'src/main/preload.ts'),
+        },
+        renderer: process.env.NODE_ENV === 'test' ? undefined : {},
+      })
+    )
+  }
+
+  return {
+    plugins,
+    optimizeDeps: {
+      exclude: ['@sqlite.org/sqlite-wasm'],
+    },
+    test: {
+      environment: 'jsdom',
+      globals: true,
+    },
+  }
 })

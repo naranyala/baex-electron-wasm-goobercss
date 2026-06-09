@@ -1,5 +1,5 @@
-import { BaseComponent } from '../../src/renderer/framework/BaseComponent';
-import { createReactiveState } from '../../src/renderer/framework/ReactiveState';
+import { BaseComponent } from '../../src/renderer/core/ui/BaseComponent';
+import { createSignal } from '../../src/renderer/core/reactivity/Reactivity';
 import { css } from 'goober';
 
 const styles = css`
@@ -26,13 +26,15 @@ const styles = css`
 `;
 
 export class ReactiveCounter extends BaseComponent {
-  state = createReactiveState({ count: 0 }, () => this.update());
+  private countSignal = createSignal(0);
+
+  get count() { return this.countSignal.get(); }
 
   render() {
     return `
       <style>${styles}</style>
       <div class="counter">
-        <div class="count">${this.state.count}</div>
+        <div class="count">${this.count}</div>
         <button id="inc">Increment</button>
         <button id="dec">Decrement</button>
       </div>
@@ -41,9 +43,9 @@ export class ReactiveCounter extends BaseComponent {
 
   connectedCallback() {
     super.connectedCallback();
-    this.shadow.getElementById('inc')?.addEventListener('click', () => this.state.count++);
-    this.shadow.getElementById('dec')?.addEventListener('click', () => this.state.count--);
+    this.shadow.getElementById('inc')?.addEventListener('click', () => this.countSignal.set(this.count + 1));
+    this.shadow.getElementById('dec')?.addEventListener('click', () => this.countSignal.set(this.count - 1));
   }
 }
 
-customElements.define('baex-reactive-counter', ReactiveCounter);
+customElements.define('exba-reactive-counter', ReactiveCounter);

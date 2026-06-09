@@ -1,78 +1,59 @@
 import { dbService, sqlUtils } from '../../services/DbService.js';
 import { addButton, crudButton, formPanel, formField, formActions, splitPanel, tableContainer } from '../../styles/theme.ts';
 
-/**
- * A generic Table View component that allows for viewing, editing, and deleting rows
- * from any given SQLite table.
- */
 export const TableView = {
-  /** Unique identifier for the component. */
   name: 'table-view',
-  /** Initial state of the table view. */
   initialState: {
-    /** Name of the table currently being viewed. */
     tableName: '',
-    /** Array of data rows fetched from the database. */
     data: [] as any[],
-    /** Loading state indicator. */
     loading: false,
-    /** Error message if the fetch fails. */
     error: '' as string | null,
-    /** ID of the row currently being edited in the form. */
     editingRowId: null as number | null,
-    /** Temporary storage for values being edited in the form. */
     formValues: {} as any,
   },
-  /** Event handlers for user interactions. */
   events: {
-    /** Handles adding a new row via prompts. */
-    'click [data-action="add"]': async (_e: Event, state: any) => {
+    'click [data-action="add"]': async (_e: Event, { state, setState }: any) => {
       const columns = Object.keys(state.data[0] || {}).filter(c => c !== 'rowid');
       const values = columns.map(col => prompt(`Value for ${col}:`) || '');
       const colsStr = columns.join(', ');
       const valsStr = values.map(v => `'${sqlUtils.escape(v)}'`).join(', ');
       await dbService.executeAction(`INSERT INTO ${state.tableName} (${colsStr}) VALUES (${valsStr})`);
-      state.data = await dbService.getTableData(state.tableName);
+      const data = await dbService.getTableData(state.tableName);
+      setState(() => ({ data }));
     },
-    /** Handles row deletion. */
-    'click [data-action="delete"]': async (e: Event, state: any) => {
+    'click [data-action="delete"]': async (e: Event, { state, setState }: any) => {
       const id = (e.target as HTMLElement).dataset.id;
       if (!confirm(`Delete row with ID ${id}?`)) return;
       await dbService.executeAction(`DELETE FROM ${state.tableName} WHERE rowid = ${id}`);
-      state.data = await dbService.getTableData(state.tableName);
+      const data = await dbService.getTableData(state.tableName);
+      setState(() => ({ data }));
     },
-    /** Enters edit mode for a specific row. */
-    'click [data-action="edit"]': (e: Event, state: any) => {
+    'click [data-action="edit"]': (e: Event, { state, setState }: any) => {
       const id = parseInt((e.target as HTMLElement).dataset.id || '0');
       const row = state.data.find((r: any) => r.rowid === id);
       if (row) {
-        state.editingRowId = id;
-        state.formValues = { ...row };
+        setState(() => ({ editingRowId: id, formValues: { ...row } }));
       }
     },
-    /** Commits changes from the edit form to the database. */
-    'click [data-action="submit"]': async (_e: Event, state: any) => {
+    'click [data-action="submit"]': async (_e: Event, { state, setState }: any) => {
       const updates = Object.entries(state.formValues)
         .filter(([k]) => k !== 'rowid')
         .map(([k, v]) => `${k} = '${sqlUtils.escape(v as string)}'`);
       await dbService.executeAction(`UPDATE ${state.tableName} SET ${updates.join(', ')} WHERE rowid = ${state.editingRowId}`);
-      state.data = await dbService.getTableData(state.tableName);
-      state.editingRowId = null;
+      const data = await dbService.getTableData(state.tableName);
+      setState(() => ({ data, editingRowId: null }));
     },
-    /** Cancels edit mode. */
-    'click [data-action="cancel"]': (_e: Event, state: any) => {
-      state.editingRowId = null;
+    'click [data-action="cancel"]': (_e: Event, _ctx: any) => {
+      _ctx.setState(() => ({ editingRowId: null }));
     },
-    /** Updates the form values in real-time during input. */
-    'input .form-input': (e: Event, state: any) => {
+    'input .form-input': (e: Event, { state, setState }: any) => {
       const target = e.target as HTMLInputElement;
       const col = target.dataset.col;
       if (col) {
-        state.formValues[col] = target.value;
+        setState(() => ({ formValues: { ...state.formValues, [col]: target.value } }));
       }
     }
   },
-  /** Renders the table and optional edit form based on the current state. */
   render: (state: any) => {
     if (state.loading) return `<div style="text-align: center; padding: 3rem; color: #6b6b7b; font-size: 0.875rem;">Loading table ${state.tableName}...</div>`;
     if (state.error) return `<div style="color: #ef4444; padding: 3rem; text-align: center; font-size: 0.875rem;">Error: ${state.error}</div>`;
@@ -138,6 +119,5 @@ export const TableView = {
       </div>
     `;
   },
-  /** Lifecycle hook: called when the component is mounted. */
   mounted: (_el: any, _state: any) => {}
 };

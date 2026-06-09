@@ -1,9 +1,14 @@
-export interface ComponentDefinition {
+export interface EventContext<S = any> {
+  state: S;
+  setState: (fn: (s: S) => Partial<S>) => void;
+}
+
+export interface ComponentDefinition<S = any> {
   name?: string;
-  render?: (state: any, helpers: any) => string;
-  mounted?: (el: any, state: any) => void;
+  render?: (state: S, helpers: { setState: (fn: (s: S) => Partial<S>) => void }) => string;
+  mounted?: (el: any, state: S) => void;
   autoUpdate?: boolean;
-  events?: Record<string, (e: Event, state: any) => void | Promise<void>>;
+  events?: Record<string, (e: Event, ctx: EventContext<S>) => void | Promise<void>>;
 }
 
 export interface IRCommand<T = any> {
@@ -14,6 +19,11 @@ export interface IRCommand<T = any> {
 export interface IRResult<T = any> {
   type: 'Number' | 'Void' | 'Error' | 'Rules';
   payload: T;
+}
+
+export interface SignalResult<T> {
+  get: () => T | null;
+  peek: () => T | null;
 }
 
 export type BridgeInterface = {

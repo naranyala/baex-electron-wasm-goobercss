@@ -3,7 +3,7 @@ import './Counter';
 
 describe('ReactiveCounter', () => {
   it('should increment count when increment button is clicked', () => {
-    const el = document.createElement('baex-reactive-counter');
+    const el = document.createElement('exba-reactive-counter');
     document.body.appendChild(el);
     
     const btn = el.shadowRoot?.querySelector('#inc');
@@ -14,7 +14,7 @@ describe('ReactiveCounter', () => {
   });
 
   it('should decrement count when decrement button is clicked', () => {
-    const el = document.createElement('baex-reactive-counter');
+    const el = document.createElement('exba-reactive-counter');
     document.body.appendChild(el);
     
     const btn = el.shadowRoot?.querySelector('#dec');

@@ -1,4 +1,4 @@
-import { BaseComponent } from '../../src/renderer/framework/BaseComponent';
+import { BaseComponent } from '../../src/renderer/core/ui/BaseComponent';
 import { css } from 'goober';
 
 const styles = css`
@@ -49,7 +49,7 @@ export class ParentComponent extends BaseComponent {
       <div class="parent">
         <h3>Parent Component</h3>
         <p>Child says: <strong>${this.message}</strong></p>
-        <baex-child></baex-child>
+        <exba-child></exba-child>
       </div>
     `;
   }
@@ -63,5 +63,5 @@ export class ParentComponent extends BaseComponent {
   }
 }
 
-customElements.define('baex-child', ChildComponent);
-customElements.define('baex-parent', ParentComponent);
+customElements.define('exba-child', ChildComponent);
+customElements.define('exba-parent', ParentComponent);

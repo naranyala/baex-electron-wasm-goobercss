@@ -21,12 +21,18 @@ import {
   statusDivider,
   menuItem
 } from './styles/theme.ts';
-import { tabs, activeTabId } from './state/appState.js';
+import { openTabs, activeTabId } from './state/appState.js';
 import { dbService } from './services/DbService.js';
 import { MapView } from './components/views/MapView.js';
 import { ChartView } from './components/views/ChartView.js';
 import { TableView } from './components/views/TableView.js';
 import { RagMenuView } from './components/views/RagMenuView.ts';
+import { AccordionView } from './components/views/AccordionView.ts';
+import { TreeViewView } from './components/views/TreeViewView.ts';
+import { DataTableView } from './components/views/DataTableView.ts';
+import { Cube3DView } from './components/views/Cube3DView.ts';
+import { FormWizardView } from './components/views/FormWizardView.ts';
+import { DrawerView } from './components/views/DrawerView.ts';
 import { TabManager } from './core/routing/TabManager.ts';
 import './components/tab-bar.ts';
 import 'leaflet/dist/leaflet.css';
@@ -38,6 +44,12 @@ defineComponent(MapView);
 defineComponent(ChartView);
 defineComponent(TableView);
 defineComponent(RagMenuView);
+defineComponent(AccordionView);
+defineComponent(TreeViewView);
+defineComponent(DataTableView);
+defineComponent(Cube3DView);
+defineComponent(FormWizardView);
+defineComponent(DrawerView);
 
 // --- App Logic ---
 
@@ -50,62 +62,72 @@ async function fetchTables() {
   }
 }
 
-const viewCache = new Map<string, HTMLElement>();
+// --- Tab System ---
 
-function showView(tabId: string | null) {
-  const container = document.getElementById('dynamic-view');
-  if (!container) return;
-  viewCache.forEach((el, id) => {
-    el.style.display = id === tabId ? '' : 'none';
-  });
-  container.style.display = tabId ? 'block' : 'none';
-}
+const panels = new Map<string, HTMLElement>();
 
-function renderTabBar() {
-  const tabBar = document.querySelector('tab-bar') as any;
-  if (!tabBar) return;
-  const currentTabs = tabs.get();
-  const tabList = Array.from(currentTabs.entries()).map(([id, { label }]) => ({ id, label }));
-  tabBar.setAttribute('tabs', JSON.stringify(tabList));
-  tabBar.setActive(activeTabId.get());
-  tabBar.style.display = tabList.length > 0 ? 'flex' : 'none';
-}
+function showView(id: string | null) {
+  const home = document.getElementById('home-view');
+  const dyn = document.getElementById('dynamic-view');
+  if (!home || !dyn) return;
 
-function openTab(tabId: string, label: string, createView: () => HTMLElement) {
-  const currentTabs = tabs.get();
-  if (!currentTabs.has(tabId)) {
-    currentTabs.set(tabId, { label });
-    const viewEl = createView();
-    viewEl.style.display = 'none';
-    viewCache.set(tabId, viewEl);
-    document.getElementById('dynamic-view')?.appendChild(viewEl);
-  }
-  activeTabId.set(tabId);
-  document.getElementById('home-view')!.style.display = 'none';
-  showView(tabId);
-  renderTabBar();
-  TabManager.save(currentTabs);
-}
-
-function removeTab(tabId: string) {
-  const currentTabs = tabs.get();
-  currentTabs.delete(tabId);
-  const el = viewCache.get(tabId);
-  if (el) el.remove();
-  viewCache.delete(tabId);
-  if (currentTabs.size === 0) {
-    activeTabId.set(null);
-    document.getElementById('home-view')!.style.display = 'block';
-    showView(null);
+  if (!id) {
+    home.style.display = '';
+    dyn.style.display = 'none';
+    panels.forEach(el => { el.style.display = 'none'; });
   } else {
-    const remaining = Array.from(currentTabs.keys());
-    const idx = remaining.indexOf(tabId);
-    const nextId = remaining[Math.max(0, Math.min(idx, remaining.length - 1))];
-    activeTabId.set(nextId);
-    showView(nextId);
+    home.style.display = 'none';
+    dyn.style.display = '';
+    panels.forEach((el, key) => {
+      el.style.display = key === id ? '' : 'none';
+    });
   }
-  renderTabBar();
-  TabManager.save(currentTabs);
+}
+
+function syncTabBar() {
+  const bar = document.querySelector('tab-bar') as any;
+  if (!bar) return;
+  bar.setAttribute('tabs', JSON.stringify(openTabs.get()));
+  bar.setAttribute('active', activeTabId.get() ?? '');
+  bar.style.display = openTabs.get().length ? '' : 'none';
+}
+
+function persist() {
+  TabManager.save(openTabs.get(), activeTabId.get());
+}
+
+function openTab(id: string, label: string, factory: () => HTMLElement) {
+  const list = openTabs.get();
+  if (!list.find(t => t.id === id)) {
+    list.push({ id, label });
+    openTabs.set([...list]);
+
+    const el = factory();
+    el.style.display = 'none';
+    panels.set(id, el);
+    document.getElementById('dynamic-view')?.appendChild(el);
+  }
+  activeTabId.set(id);
+  showView(id);
+  syncTabBar();
+  persist();
+}
+
+function closeTab(id: string) {
+  const list = openTabs.get().filter(t => t.id !== id);
+  openTabs.set(list);
+
+  const el = panels.get(id);
+  if (el) { el.remove(); panels.delete(id); }
+
+  const cur = activeTabId.get();
+  if (cur === id) {
+    const next = list.length ? list[list.length - 1].id : null;
+    activeTabId.set(next);
+    showView(next);
+  }
+  syncTabBar();
+  persist();
 }
 
 export function fuzzySearch(query: string, items: any[]) {
@@ -164,7 +186,7 @@ const devToolsStyles = {
   `
 };
 
-function showBaexDevTools() {
+function showExbaDevTools() {
   const app = document.querySelector<HTMLDivElement>('#app');
   if (!app) return;
   const backdrop = document.createElement('div');
@@ -174,7 +196,7 @@ function showBaexDevTools() {
   content.className = 'modal-content'; 
   content.style.maxWidth = '50rem';
   const irData = {
-    jsLayer: { framework: 'BAEX-SPA v1.0', reactivity: 'Signal-based', rendering: 'Declarative Template', bridge: 'Worker-Bridge' },
+    jsLayer: { framework: 'EXBA-SPA v1.0', reactivity: 'Signal-based', rendering: 'Declarative Template', bridge: 'Worker-Bridge' },
     wasmLayer: { module: 'wasm_rust.wasm', target: 'web', primitives: Object.keys(WasmBridge).reduce((acc, cat) => acc + Object.keys((WasmBridge as any)[cat]).length, 0), exportType: 'ESM' },
     rustLayer: { compiler: 'rustc 1.95+', optimizations: 'release', memory: 'Linear Wasm Memory', core_crates: ['rusqlite', 'serde'] },
     nativeLayer: { ffi: 'napi-rs', db_engine: 'SQLite 3.x', storage: 'app.db', binary: 'index.node' }
@@ -216,7 +238,7 @@ function showBaexDevTools() {
   };
   content.innerHTML = `
     <div class="${devToolsStyles.header}">
-      <h3>🛠️ BAEX Intermediate Representation Inspector</h3>
+      <h3>🛠️ EXBA Intermediate Representation Inspector</h3>
       <button id="close-devtools" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem;">&times;</button>
     </div>
     <div style="overflow-y: auto; max-height: 70vh;">
@@ -270,7 +292,7 @@ async function initApp() {
   
   app.innerHTML = 
     '<div class="' + navBar + '">' +
-      '<div class="' + brandHome + '" id="home-btn"><span>BAEX</span> ⌂</div>' +
+      '<div class="' + brandHome + '" id="home-btn"><span>EXBA</span></div>' +
       '<tab-bar id="main-tab-bar" style="flex: 1;"></tab-bar>' +
     '</div>' +
     '<div class="' + appContainer + '"><div class="' + contentWrapper + '">' +
@@ -292,6 +314,10 @@ async function initApp() {
           '<div class="' + sectionHeader + '">RAG System</div>' +
           '<div class="' + sectionContainer + '"><div id="rag-grid" class="' + menuGrid + '"></div></div>' +
         '</div>' +
+        '<div style="margin-bottom: 2rem;">' +
+          '<div class="' + sectionHeader + '">Component Examples</div>' +
+          '<div class="' + sectionContainer + '"><div id="examples-grid" class="' + menuGrid + '"></div></div>' +
+        '</div>' +
       '</div>' +
       '<div id="dynamic-view" style="display: none; padding: 1.5rem 0;"></div>' +
     '</div></div>' +
@@ -308,70 +334,81 @@ async function initApp() {
       '</span>' +
     '</div>';
 
-  document.getElementById('status-bar')?.addEventListener('click', showBaexDevTools);
+  document.getElementById('status-bar')?.addEventListener('click', showExbaDevTools);
 
   document.getElementById('home-btn')?.addEventListener('click', () => {
-    router.navigate('/');
     activeTabId.set(null);
-    tabs.get().clear();
-    viewCache.forEach(el => el.remove());
-    viewCache.clear();
-    document.getElementById('home-view')!.style.display = 'block';
     showView(null);
-    renderTabBar();
-    TabManager.clear();
+    syncTabBar();
+    persist();
   });
 
   const tabBar = document.getElementById('main-tab-bar');
-  tabBar?.addEventListener('tab-selected', (e: any) => {
-    const tabId = e.detail;
-    document.getElementById('home-view')!.style.display = 'none';
-    showView(tabId);
-    activeTabId.set(tabId);
-    renderTabBar();
+  tabBar?.addEventListener('tab-click', (e: any) => {
+    const id = e.detail;
+    activeTabId.set(id);
+    showView(id);
+    syncTabBar();
+    persist();
   });
   tabBar?.addEventListener('tab-close', (e: any) => {
-    removeTab(e.detail);
+    closeTab(e.detail);
   });
 
-  // Restore persisted tabs
-  const storedTabs = TabManager.load();
-  storedTabs.forEach(({ id, label }) => {
-    let el: HTMLElement | null = null;
-    if (id.startsWith('table-')) {
-      const tableName = id.slice(6);
-      el = document.createElement('table-view');
-      const st = (el as any).state;
-      st.tableName = tableName;
-      st.loading = true;
-      dbService.getTableData(tableName).then(data => {
-        st.data = data;
-        st.loading = false;
-      }).catch((e: any) => {
-        st.error = e.message || e;
-        st.loading = false;
-      });
-    } else if (id.startsWith('chart-')) {
-      el = document.createElement('chart-view');
-    } else if (id.startsWith('map-')) {
-      el = document.createElement('map-view');
-    } else if (id.startsWith('rag-')) {
-      el = document.createElement('rag-menu-view');
+  // Restore persisted state
+  const { tabs: stored, activeId } = TabManager.load();
+  if (stored.length) {
+    openTabs.set(stored);
+    stored.forEach(({ id }) => {
+      let el: HTMLElement | null = null;
+      if (id.startsWith('table-')) {
+        const tableName = id.slice(6);
+        el = document.createElement('table-view');
+        (el as any).setState(() => ({ tableName, loading: true }));
+        dbService.getTableData(tableName).then(data => {
+          (el as any).setState(() => ({ data, loading: false }));
+        }).catch((e: any) => {
+          (el as any).setState(() => ({ error: e.message || e, loading: false }));
+        });
+      } else if (id.startsWith('chart-')) {
+        el = document.createElement('chart-view');
+      } else if (id.startsWith('map-')) {
+        el = document.createElement('map-view');
+      } else if (id.startsWith('rag-')) {
+        el = document.createElement('rag-menu-view');
+      } else if (id.startsWith('example-')) {
+        const map: Record<string, string> = {
+          'example-accordion': 'accordion-view',
+          'example-tree': 'tree-view',
+          'example-table': 'data-table-view',
+          'example-cube': 'cube-3d-view',
+          'example-wizard': 'form-wizard-view',
+          'example-drawer': 'drawer-view',
+        };
+        if (map[id]) el = document.createElement(map[id]);
+      }
+      if (el) {
+        el.style.display = 'none';
+        panels.set(id, el);
+        document.getElementById('dynamic-view')?.appendChild(el);
+      }
+    });
+    if (activeId && panels.has(activeId)) {
+      activeTabId.set(activeId);
+      showView(activeId);
+    } else {
+      showView(null);
     }
-    if (el) {
-      tabs.get().set(id, { label });
-      el.style.display = 'none';
-      viewCache.set(id, el);
-      document.getElementById('dynamic-view')?.appendChild(el);
-    }
-  });
-  if (activeTabId.peek()) showView(activeTabId.peek());
-  renderTabBar();
+  } else {
+    showView(null);
+  }
+  syncTabBar();
 
   const menuGridEl = document.getElementById('menu-grid');
   const chartsGridEl = document.getElementById('charts-grid');
   const mapsGridEl = document.getElementById('maps-grid');
   const ragGridEl = document.getElementById('rag-grid');
+  const examplesGridEl = document.getElementById('examples-grid');
   
   try {
     const tables = await fetchTables();
@@ -385,15 +422,11 @@ async function initApp() {
         el.onclick = () => {
           openTab(`table-${tableName}`, tableName, () => {
             const view = document.createElement('table-view');
-            const st = (view as any).state;
-            st.tableName = tableName;
-            st.loading = true;
+            (view as any).setState(() => ({ tableName, loading: true }));
             dbService.getTableData(tableName).then(data => {
-              st.data = data;
-              st.loading = false;
+              (view as any).setState(() => ({ data, loading: false }));
             }).catch((e: any) => {
-              st.error = e.message || e;
-              st.loading = false;
+              (view as any).setState(() => ({ error: e.message || e, loading: false }));
             });
             return view;
           });
@@ -441,6 +474,27 @@ async function initApp() {
         openTab(`rag-${item.id}`, item.label, () => document.createElement('rag-menu-view'));
       };
       ragGridEl?.appendChild(el);
+    });
+
+    const exampleItems = [
+      { id: 'accordion', label: 'Accordion Demo', icon: '🗂️' },
+      { id: 'tree', label: 'Treeview Demo', icon: '🌲' },
+      { id: 'table', label: 'Sorted Table', icon: '📊' },
+      { id: 'cube', label: '3D Cube (LA)', icon: '🧊' },
+      { id: 'wizard', label: 'Form Wizard', icon: '📝' },
+      { id: 'drawer', label: 'Sliding Drawer', icon: '📱' },
+    ];
+    exampleItems.forEach(item => {
+      const el = document.createElement('div');
+      el.className = menuItem;
+      el.innerHTML = `<div style="font-size: 1.75rem; line-height: 1;">${item.icon}</div><div style="margin-top: 0.375rem;">${item.label}</div>`;
+      el.onclick = () => {
+        openTab(`example-${item.id}`, item.label, () => {
+          const view = document.createElement(item.id === 'accordion' ? 'accordion-view' : item.id === 'tree' ? 'tree-view' : item.id === 'table' ? 'data-table-view' : item.id === 'cube' ? 'cube-3d-view' : item.id === 'wizard' ? 'form-wizard-view' : 'drawer-view');
+          return view;
+        });
+      };
+      examplesGridEl?.appendChild(el);
     });
   } catch (error: any) {
     menuGridEl!.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #f87171; font-size: 0.8125rem;">

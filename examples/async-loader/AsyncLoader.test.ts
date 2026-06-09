@@ -3,7 +3,7 @@ import './AsyncLoader';
 
 describe('AsyncLoader', () => {
   it('should show loading state then data', async () => {
-    const el = document.createElement('baex-async-loader');
+    const el = document.createElement('exba-async-loader');
     document.body.appendChild(el);
     
     const btn = el.shadowRoot?.querySelector('#fetch-btn');
@@ -14,6 +14,6 @@ describe('AsyncLoader', () => {
     // Wait for the mocked API call (1.5s)
     await new Promise(res => setTimeout(res, 1600));
     
-    expect(el.shadowRoot?.textContent).toContain('🚀 Data fetched from BAEX API!');
+    expect(el.shadowRoot?.textContent).toContain('🚀 Data fetched from EXBA API!');
   });
 });

@@ -1,5 +1,5 @@
-import { BaseComponent } from '../../src/renderer/framework/BaseComponent';
-import { createReactiveState } from '../../src/renderer/framework/ReactiveState';
+import { BaseComponent } from '../../src/renderer/core/ui/BaseComponent';
+import { createSignal } from '../../src/renderer/core/reactivity/Reactivity';
 import { css } from 'goober';
 
 const styles = css`
@@ -25,26 +25,29 @@ const styles = css`
 `;
 
 export class AsyncLoader extends BaseComponent {
-  state = createReactiveState({ loading: false, data: null as string | null }, () => this.update());
+  private loadingSignal = createSignal(false);
+  private dataSignal = createSignal<string | null>(null);
+
+  get loading() { return this.loadingSignal.get(); }
+  get data() { return this.dataSignal.get(); }
 
   async fetchData() {
-    this.state.loading = true;
-    // Simulate API call
+    this.loadingSignal.set(true);
     await new Promise(res => setTimeout(res, 1500));
-    this.state.data = "🚀 Data fetched from BAEX API!";
-    this.state.loading = false;
+    this.dataSignal.set("🚀 Data fetched from EXBA API!");
+    this.loadingSignal.set(false);
   }
 
   render() {
     return `
       <style>${styles}</style>
       <div class="loader">
-        ${this.state.loading 
+        ${this.loading 
           ? `<div><span class="spinner"></span> Loading...</div>` 
-          : `<div>${this.state.data || 'Ready to fetch'}</div>`
+          : `<div>${this.data || 'Ready to fetch'}</div>`
         }
-        <button id="fetch-btn" ${this.state.loading ? 'disabled' : ''} style="margin-top: 1rem">
-          ${this.state.loading ? 'Fetching...' : 'Fetch Data'}
+        <button id="fetch-btn" ${this.loading ? 'disabled' : ''} style="margin-top: 1rem">
+          ${this.loading ? 'Fetching...' : 'Fetch Data'}
         </button>
       </div>
     `;
@@ -56,4 +59,4 @@ export class AsyncLoader extends BaseComponent {
   }
 }
 
-customElements.define('baex-async-loader', AsyncLoader);
+customElements.define('exba-async-loader', AsyncLoader);

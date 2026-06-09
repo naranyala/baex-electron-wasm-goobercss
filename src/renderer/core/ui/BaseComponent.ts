@@ -3,8 +3,9 @@ import { ComponentDefinition } from '../bridge/types';
 
 export abstract class BaseComponent extends HTMLElement {
   protected shadow: ShadowRoot;
-  protected _state: any;
   protected definition: ComponentDefinition;
+  private _effectCleanup: (() => void) | null = null;
+  protected _cleanups: (() => void)[] = [];
 
   constructor(definition?: ComponentDefinition) {
     super();
@@ -14,7 +15,7 @@ export abstract class BaseComponent extends HTMLElement {
 
   connectedCallback() {
     if (this.definition.autoUpdate !== false) {
-      createEffect(() => {
+      this._effectCleanup = createEffect(() => {
         this.update();
       });
     } else {
@@ -22,15 +23,36 @@ export abstract class BaseComponent extends HTMLElement {
     }
   }
 
-  /**
-   * Components should return a template string of their HTML.
-   */
+  disconnectedCallback() {
+    if (this._effectCleanup) {
+      this._effectCleanup();
+      this._effectCleanup = null;
+    }
+    this._cleanups.forEach(fn => fn());
+    this._cleanups = [];
+  }
+
   abstract render(): string;
 
   protected update() {
     const newHtml = this.render();
     if (this.shadow.innerHTML !== newHtml) {
       this.shadow.innerHTML = newHtml;
+      this.optimizeStyles();
+    }
+  }
+
+  private optimizeStyles() {
+    const inlineStyle = this.shadow.querySelector('style');
+    if (inlineStyle) {
+      try {
+        const sheet = new CSSStyleSheet();
+        sheet.replaceSync(inlineStyle.textContent || '');
+        this.shadow.adoptedStyleSheets = [sheet];
+        inlineStyle.remove();
+      } catch {
+        // Fallback: keep inline <style> if CSSStyleSheet unsupported
+      }
     }
   }
 }

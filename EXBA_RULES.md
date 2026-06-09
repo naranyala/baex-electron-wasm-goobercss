@@ -1,6 +1,6 @@
-# BAEX Intermediate Representation (IR) Rules & Anomalies
+# EXBA Intermediate Representation (IR) Rules & Anomalies
 
-This document defines the architectural constraints and error-handling paradigms for the BAEX framework.
+This document defines the architectural constraints and error-handling paradigms for the EXBA framework.
 
 ## 📜 RULES (Communication Contract)
 1.  **JSON-Only:** All communication between TypeScript and Rust MUST be serialized as JSON strings.

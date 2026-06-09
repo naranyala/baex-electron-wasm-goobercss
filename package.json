@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:electron": "vite build && electron . --no-sandbox",
+    "dev": "VITE_NO_ELECTRON=1 vite",
+    "dev:electron": "vite",
     "build:wasm": "cd core/rust && wasm-pack build --target web",
     "build": "tsc && vite build && electron-builder",
     "preview": "vite preview",

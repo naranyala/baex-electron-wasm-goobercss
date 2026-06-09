@@ -3,7 +3,7 @@ import './TodoList';
 
 describe('TodoList', () => {
   it('should add a todo item', () => {
-    const el = document.createElement('baex-todo-list');
+    const el = document.createElement('exba-todo-list');
     document.body.appendChild(el);
     
     const input = el.shadowRoot?.querySelector('#todo-input') as HTMLInputElement;
@@ -17,7 +17,7 @@ describe('TodoList', () => {
   });
 
   it('should delete a todo item', () => {
-    const el = document.createElement('baex-todo-list');
+    const el = document.createElement('exba-todo-list');
     document.body.appendChild(el);
     
     const input = el.shadowRoot?.querySelector('#todo-input') as HTMLInputElement;

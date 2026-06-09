@@ -29,7 +29,7 @@ enum IRCommand {
 }
 
 // --- Compiler Implementation ---
-// OpCodes for the BAEX Bytecode format
+// OpCodes for the EXBA Bytecode format
 const OP_ADD: u8 = 0x01;
 const OP_FIB: u8 = 0x02;
 const OP_FACT: u8 = 0x03;

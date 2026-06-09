@@ -20,7 +20,7 @@ describe('Compiler', () => {
   });
 
   it('should handle complex string operations via bytecode', async () => {
-    const command = JSON.stringify({ type: 'ReverseString', payload: { text: 'BAEX' } });
+    const command = JSON.stringify({ type: 'ReverseString', payload: { text: 'EXBA' } });
     const compiled = await compiler.compile(command);
     const result = await compiler.executeBinary(compiled.bytecode);
     expect(result).toBe('XEAB');

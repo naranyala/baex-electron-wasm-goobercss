@@ -14,13 +14,20 @@ export class FrontendDatabase implements DatabaseInterface {
    * @param {string} name - The name of the database file to create/open in OPFS.
    * @returns {Promise<void>}
    */
-  async init(name: string = 'baex-app-db'): Promise<void> {
+  async init(name: string = 'exba-app-db'): Promise<void> {
     const sqlite3 = await (sqlite3Module as any)();
     try {
-      this.db = new sqlite3.oo1.OpfsDb(name);
-      console.log(`SQLite OPFS database ${name} initialized successfully`);
+      // The OPFS implementation of sqlite-wasm requires the 'sqlite3' global to be set 
+      // or specifically passed. In newer versions of @sqlite.org/sqlite-wasm, 
+      // OpfsDb is available on the returned module.
+      if (sqlite3.oo1 && sqlite3.oo1.OpfsDb) {
+        this.db = new sqlite3.oo1.OpfsDb(name);
+        console.log(`SQLite OPFS database ${name} initialized successfully`);
+      } else {
+        throw new Error('OpfsDb constructor not found in sqlite3 module');
+      }
     } catch (e) {
-      console.error('Failed to open OPFS database, falling back to in-memory:', e);
+      console.warn('Failed to open OPFS database, falling back to in-memory:', e);
       this.db = new sqlite3.oo1.DB();
     }
   }

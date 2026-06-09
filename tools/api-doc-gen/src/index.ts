@@ -59,7 +59,7 @@ async function main() {
 
   // Generation
   const html = Generator.generate(allEntries);
-  const outputPath = path.join(process.cwd(), 'index.html');
+  const outputPath = path.join(process.cwd(), 'api-docs.html');
   fs.writeFileSync(outputPath, html);
   
   console.log(`\n✨ Documentation generated successfully at ${outputPath}`);

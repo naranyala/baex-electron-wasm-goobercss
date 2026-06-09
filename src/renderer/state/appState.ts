@@ -1,4 +1,9 @@
 import { createSignal } from '../core/reactivity/Reactivity';
 
-export const tabs = createSignal(new Map());
+export interface Tab {
+  id: string;
+  label: string;
+}
+
+export const openTabs = createSignal<Tab[]>([]);
 export const activeTabId = createSignal<string | null>(null);

@@ -1,5 +1,5 @@
-import { BaseComponent } from '../../src/renderer/framework/BaseComponent';
-import { createReactiveState } from '../../src/renderer/framework/ReactiveState';
+import { BaseComponent } from '../../src/renderer/core/ui/BaseComponent';
+import { createSignal } from '../../src/renderer/core/reactivity/Reactivity';
 import { css } from 'goober';
 
 const styles = css`
@@ -39,19 +39,21 @@ const styles = css`
 `;
 
 export class TodoList extends BaseComponent {
-  state = createReactiveState({ items: [] as string[] }, () => this.update());
+  private itemsSignal = createSignal<string[]>([]);
+
+  get items() { return this.itemsSignal.get(); }
 
   render() {
     return `
       <style>${styles}</style>
       <div class="container">
-        <h3>BAEX Todos</h3>
+        <h3>EXBA Todos</h3>
         <div class="input-group">
           <input type="text" id="todo-input" placeholder="New task...">
           <button id="add-btn">Add</button>
         </div>
         <ul id="list">
-          ${this.state.items.map((item, idx) => `
+          ${this.items.map((item, idx) => `
             <li>
               ${item} 
               <button class="delete-btn" data-index="${idx}">×</button>
@@ -71,7 +73,7 @@ export class TodoList extends BaseComponent {
     const input = this.shadow.getElementById('todo-input') as HTMLInputElement;
     this.shadow.getElementById('add-btn')?.addEventListener('click', () => {
       if (input && input.value) {
-        this.state.items = [...this.state.items, input.value];
+        this.itemsSignal.set([...this.items, input.value]);
         input.value = '';
       }
     });
@@ -79,10 +81,10 @@ export class TodoList extends BaseComponent {
     this.shadow.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const idx = parseInt((e.target as HTMLElement).dataset.index || '0');
-        this.state.items = this.state.items.filter((_, i) => i !== idx);
+        this.itemsSignal.set(this.items.filter((_, i) => i !== idx));
       });
     });
   }
 }
 
-customElements.define('baex-todo-list', TodoList);
+customElements.define('exba-todo-list', TodoList);
