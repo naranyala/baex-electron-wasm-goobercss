@@ -1,96 +1,79 @@
 # EXBA: Extended Browser API
 
-<div><img src="./x-sword-humanoid-bee.png" width="40%"/></div>
+EXBA is a high-performance framework for building browser-native Web Components powered by WebAssembly compiled from Rust and signal-based reactivity.
 
-EXBA is a high-performance framework for building browser-native Web Components powered by **Rust/WASM computation** and **Hybrid Signal Reactivity**. 
-
-The name stands for **Extended Browser API** — the philosophy that the browser's native capabilities (Custom Elements, Light/Shadow DOM, CSS-in-JS) should be extended with WASM-backed logic without heavy framework lock-in.
+The name stands for Extended Browser API - based on the philosophy that the browser's native capabilities (Custom Elements, Shadow DOM, CSS-in-JS) should be extended with Rust/WebAssembly-backed computation without heavy framework lock-in.
 
 ---
 
-## 🚀 Key Features (Modernized)
+## Key Features
 
 ### 1. Tiered Rendering Architecture
 EXBA utilizes a dual-tier rendering engine to maximize performance:
-- **Tier 1 (Rust-WASM)**: Automatically generates `UIBlueprints` by parsing templates in Rust. This enables **$O(1)$ direct DOM updates** and pre-compiled event wiring.
-- **Tier 2 (TypeScript Fallback)**: A robust JS-based engine that ensures the app renders perfectly even during WASM initialization or in restricted environments.
+* **Tier 1 (Rust-WASM):** Automatically generates UIBlueprints by parsing templates in Rust. This enables high-performance direct DOM updates and pre-compiled event wiring.
+* **Tier 2 (TypeScript Fallback):** A JavaScript-based engine that ensures the application renders correctly even during WASM initialization or in restricted browser environments.
 
 ### 2. Deep-Reactive Proxy Stores
-No more manual `setState` or partial patching. EXBA components use a **Proxy-based state** that maps directly to fine-grained signals.
-- **Declarative Mutation**: `state.count++` automatically triggers a batched, high-performance re-render.
-- **Automatic Dependency Tracking**: Components only re-render when the specific properties they access are modified.
+EXBA components use a Proxy-based state mapping directly to fine-grained signals.
+* **Declarative Mutation:** State changes automatically trigger batched, high-performance re-renders.
+* **Automatic Dependency Tracking:** Components only re-render when the specific properties they access are modified.
 
-### 3. Recursive Template Engine
-A powerful, recursive `html` tagged template system that handles:
-- **Deep Nesting**: Nest `html` templates inside maps and conditionals without `[object Object]` errors.
-- **Implicit Event Binding**: Use `@click=${handler}` syntax directly in templates. The framework handles the delegation and cleanup automatically.
-- **Array Flattening**: Maps and lists are rendered efficiently without manual `.join('')`.
+### 3. Unified Custom Component Specification
+Components extend the base `ExbaComponent` class, providing:
+* **Static Scoped Styling:** Scoped CSS styles defined as key-value objects or strings using Tailwind-compatible variables.
+* **Observed Attributes:** Reactively bound inputs mapped to class properties.
+* **Unified Event Delegation:** Clean handling of element events directly inside templates.
 
-### 4. Professionalized Component Lifecycle
-- **Unified `setup` Hook**: A persistent context for side effects, timers, and specialized logic that survives re-renders.
-- **Batched Updates**: Multiple state changes are automatically collapsed into a single `requestAnimationFrame` cycle.
-- **DOM Mode Flexibility**: Easily toggle between **Shadow DOM** (for encapsulation) and **Light DOM** (for global CSS/Goober integration) via the `useShadow` flag.
+### 4. Interactive Graph & Component Demos
+The framework includes implementation demonstrations for complex UI controls:
+* **Cytoscape.js Mindmap:** Explores hierarchical structures using layout algorithms, node selection details, and base64 PNG exports.
+* **Vis-network Mindmap:** Displays bouncing nodes utilizing dynamic physics options, live toggles, and canvas image generation.
+* **DatePicker Component:** A monthly viewed date picker featuring custom navigation controls and event emitting.
 
-### 5. WASM-Native Diagnostics (Web-Fetch)
-Includes a built-in **"Neofetch for the browser"** tool. It gathers raw hardware data from Electron and processes it through a Rust-WASM engine to generate stylized system reports.
+### 5. Native Diagnostics
+Includes a built-in system fetch tool. It gathers raw hardware data from Electron and processes it through the Rust WebAssembly engine to generate detailed system reports.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-  View Layer        Custom Elements + Optional Shadow DOM + goober CSS
+  View Layer        Custom Elements + Optional Shadow DOM + CSS-in-JS
   Reactivity Layer  createStore (Proxy) + createSignal + createEffect (Batched)
-  Bridge Layer      WorkerBridge + WasmWorker + Typed Command Dispatcher
+  Bridge Layer      WASM Bridge + Typed Command Dispatcher
   WASM Layer        Rust Core (AppState + UIBlueprint + Optimization Engine)
 ```
 
-### WASM Optimization Layer
-The Rust core is no longer just for "heavy math". It now acts as a **UI Optimizer**:
-- **`OptimizeUI`**: A Rust command that scans HTML templates to identify dynamic slots and event handlers.
-- **`UIBlueprint`**: A serialized structure returned by Rust that allows the TS layer to cache DOM references for instant updates.
-
 ---
 
-## 🛠️ Development
+## Development
+
+Install the project dependencies first, then execute the required scripts:
 
 ```bash
-npm run dev                  # Start Vite dev server (browser only)
-npm run dev:electron         # Start Vite + Electron
-npm run build:wasm           # Compile Rust to WASM (wasm-pack build --target web)
-npm run build                # Full build: tsc + vite + electron-builder
-npm run build:win            # Build for Windows (Installer + Portable)
-npm run run:win              # Run Windows Portable binary via Wine
-npm run test:frontend        # Run Vitest integration suite
+# Start Vite development server (browser only)
+npm run dev
+
+# Start Vite + Electron wrapper
+npm run dev:electron
+
+# Compile Rust core to WebAssembly
+npm run build:wasm
+
+# Full production build (TypeScript compile + Vite build + Electron package)
+npm run build
+
+# Run frontend test suite
+npm run test:frontend
 ```
 
 ---
 
-## 📈 Roadmap
-
-### Phase 1: Core Reactivity (Completed)
-Established signal-based state and basic component lifecycle.
-
-### Phase 2: WASM Bridge (Completed)
-Implemented worker-based IR communication and typed API categories.
-
-### Phase 3: Professionalization (Completed)
-Added Slot support, Context API (`provide`/`inject`), and Props reactivity.
-
-### Phase 4: Performance & Ergonomics (Completed)
-Implemented Tiered Rendering (Rust), Proxy-based Stores, recursive templates, and `@event` syntax.
-
-### Phase 5: Production Readiness (Active)
-Focusing on E2E testing, advanced WASM memory pooling, and Native Hybridization (Node-Native Addons).
-
----
-
-## 📜 Framework Contract
+## Framework Contract
 
 | Feature | Pattern | Benefit |
 | :--- | :--- | :--- |
 | **State** | `createStore(initialState)` | Proxy-based, intuitive, deep reactivity. |
-| **Events** | `@click=${handler}` | Template-native, auto-delegated, clean. |
-| **Lifecycle** | `setup`, `mounted`, `updated` | Predictable, batched, standard-compliant. |
-| **Styles** | `useShadow: false` + `goober` | Perfect theme integration and style inheritance. |
-| **Performance** | Tiered Rendering | Rust-speed UI updates with JS reliability. |
+| **Events** | Class-method or DOM actions | Scoped event handlers, self-contained. |
+| **Styles** | Scoped class mappings | Theme integration and styling encapsulation. |
+| **Performance** | Tiered Rendering | WebAssembly execution speeds with JS fallbacks. |
