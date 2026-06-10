@@ -5,6 +5,7 @@ use std::sync::{Mutex, OnceLock};
 /// The global application state.
 /// This is the "Single Source of Truth" (SSOT).
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AppState {
     pub user_name: String,
     pub theme: String,

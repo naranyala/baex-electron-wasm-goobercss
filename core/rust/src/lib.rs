@@ -29,6 +29,48 @@ enum IRCommand {
     ReportAnomaly { message: String },
     /// Queries the rules/schema of the current IR format.
     RulesQuery,
+    /// Generates a system fetch report based on a raw snapshot.
+    SystemFetch { snapshot: String },
+    /// Optimizes a UI template by extracting dynamic bindings.
+    OptimizeUI { template: String },
+}
+
+/// Represents a pre-processed UI structure for high-performance rendering.
+#[derive(Serialize)]
+pub struct UIBlueprint {
+    pub base_html: String,
+    pub dynamic_slots: Vec<usize>,
+    pub events: Vec<UIEvent>,
+}
+
+#[derive(Serialize)]
+pub struct UIEvent {
+    pub event_type: String,
+    pub handler_id: String,
+}
+
+/// Raw system data structure for processing.
+#[derive(Deserialize)]
+struct SystemSnapshot {
+    os: String,
+    kernel: String,
+    arch: String,
+    cpu: String,
+    uptime: u64,
+    total_mem: u64,
+    free_mem: u64,
+}
+
+/// Raw system data structure for processing.
+#[derive(Deserialize)]
+struct SystemInfo {
+    os: String,
+    kernel: String,
+    arch: String,
+    cpu: String,
+    uptime: u64,
+    total_mem: u64,
+    free_mem: u64,
 }
 
 // --- Compiler Implementation ---
@@ -41,6 +83,8 @@ const OP_PAL: u8 = 0x05;
 const OP_GRT: u8 = 0x06;
 const OP_ANO: u8 = 0x07;
 const OP_RUL: u8 = 0x08;
+const OP_SYS: u8 = 0x09;
+const OP_OPT: u8 = 0x0a;
 
 /// Compiles a JSON-encoded IR command into a binary bytecode format.
 /// 
@@ -96,6 +140,18 @@ pub fn compile_ir(command_json: &str) -> Result<Vec<u8>, JsValue> {
         }
         IRCommand::RulesQuery => {
             bytecode.push(OP_RUL);
+        }
+        IRCommand::SystemFetch { snapshot } => {
+            bytecode.push(OP_SYS);
+            let bytes = snapshot.as_bytes();
+            bytecode.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+            bytecode.extend_from_slice(bytes);
+        }
+        IRCommand::OptimizeUI { template } => {
+            bytecode.push(OP_OPT);
+            let bytes = template.as_bytes();
+            bytecode.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+            bytecode.extend_from_slice(bytes);
         }
     }
     Ok(bytecode)
@@ -164,6 +220,80 @@ pub fn execute_bytecode(bytecode: &[u8]) -> Result<JsValue, JsValue> {
                 schema: "Binary-IR bytecode format, OpCode + Payload".to_string() 
             }
         }
+        OP_SYS => {
+            let len = u32::from_le_bytes(bytecode[cursor..cursor+4].try_into().unwrap()) as usize;
+            let snapshot = std::str::from_utf8(&bytecode[cursor+4..cursor+4+len])
+                .map_err(|e| JsValue::from_str(&format!("UTF8 error: {}", e)))?;
+            
+            match serde_json::from_str::<SystemSnapshot>(snapshot) {
+                Ok(snap) => {
+                    let used_mem = (snap.total_mem - snap.free_mem) / 1024 / 1024;
+                    let total_mem = snap.total_mem / 1024 / 1024;
+                    let uptime_h = snap.uptime / 3600;
+                    let uptime_m = (snap.uptime % 3600) / 60;
+                    let report = format!(
+"          _---_
+         /     \\
+        | () () |     OS: EXBA Browser OS ({})
+         \\  ^  /      Kernel: {}
+          |||||       CPU: {}
+          |||||       Memory: {}MB / {}MB
+                      Uptime: {}h {}m
+                      Arch: {}",
+                        snap.os, snap.kernel, snap.cpu, used_mem, total_mem, uptime_h, uptime_m, snap.arch
+                    );
+                    IRResult::SystemInfo { report }
+                },
+                Err(e) => IRResult::Error { message: format!("Snapshot parse error: {}", e) }
+            }
+        }
+        OP_OPT => {
+            let len = u32::from_le_bytes(bytecode[cursor..cursor+4].try_into().unwrap()) as usize;
+            let template = std::str::from_utf8(&bytecode[cursor+4..cursor+4+len])
+                .map_err(|e| JsValue::from_str(&format!("UTF8 error: {}", e)))?;
+            
+            let mut dynamic_slots = Vec::new();
+            let mut events = Vec::new();
+            
+            let mut scan_cursor = 0;
+            while let Some(pos) = template[scan_cursor..].find("data-dyn-id=\"") {
+                let start = scan_cursor + pos + 13;
+                if let Some(end) = template[start..].find("\"") {
+                    if let Ok(id) = template[start..start+end].parse::<usize>() {
+                        dynamic_slots.push(id);
+                    }
+                    scan_cursor = start + end;
+                } else { break; }
+            }
+
+            scan_cursor = 0;
+            while let Some(pos) = template[scan_cursor..].find("data-exba-evt-") {
+                let attr_start = scan_cursor + pos;
+                if let Some(eq_pos) = template[attr_start..].find("=\"") {
+                    let event_type = &template[attr_start+14..attr_start+eq_pos];
+                    let val_start = attr_start + eq_pos + 2;
+                    if let Some(val_end) = template[val_start..].find("\"") {
+                        let handler_id = &template[val_start..val_start+val_end];
+                        events.push(UIEvent {
+                            event_type: event_type.to_string(),
+                            handler_id: handler_id.to_string(),
+                        });
+                        scan_cursor = val_start + val_end;
+                    } else { break; }
+                } else { break; }
+            }
+
+            let result = UIBlueprint {
+                base_html: template.to_string(),
+                dynamic_slots,
+                events,
+            };
+            
+            match serde_json::to_string(&result) {
+                Ok(json) => IRResult::Rules { schema: json },
+                Err(e) => IRResult::Error { message: format!("Blueprint error: {}", e) }
+            }
+        }
         _ => return Err(JsValue::from_str("Unknown OpCode")),
     };
 
@@ -182,6 +312,8 @@ enum IRResult {
     Error { message: String },
     /// A structural or schema result.
     Rules { schema: String },
+    /// A system info report.
+    SystemInfo { report: String },
 }
 
 /// Wasm entry point. Initializes the tracing subscriber for browser logging.
@@ -234,6 +366,75 @@ fn process_ir_logic(command: IRCommand) -> IRResult {
                 schema: "JSON-based IR, tag-content payload".to_string() 
             }
         },
+        IRCommand::SystemFetch { snapshot } => {
+            info!("System Fetch requested");
+            match serde_json::from_str::<SystemSnapshot>(&snapshot) {
+                Ok(snap) => {
+                    let used_mem = (snap.total_mem - snap.free_mem) / 1024 / 1024;
+                    let total_mem = snap.total_mem / 1024 / 1024;
+                    let uptime_h = snap.uptime / 3600;
+                    let uptime_m = (snap.uptime % 3600) / 60;
+
+                    let report = format!(
+"          _---_
+         /     \\
+        | () () |     OS: EXBA Browser OS ({})
+         \\  ^  /      Kernel: {}
+          |||||       CPU: {}
+          |||||       Memory: {}MB / {}MB
+                      Uptime: {}h {}m
+                      Arch: {}",
+                        snap.os, snap.kernel, snap.cpu, used_mem, total_mem, uptime_h, uptime_m, snap.arch
+                    );
+                    IRResult::SystemInfo { report }
+                },
+                Err(e) => IRResult::Error { message: format!("Snapshot parse error: {}", e) }
+            }
+        },
+        IRCommand::OptimizeUI { template } => {
+            info!("UI Optimization requested");
+            let mut dynamic_slots = Vec::new();
+            let mut events = Vec::new();
+            
+            let mut scan_cursor = 0;
+            while let Some(pos) = template[scan_cursor..].find("data-dyn-id=\"") {
+                let start = scan_cursor + pos + 13;
+                if let Some(end) = template[start..].find("\"") {
+                    if let Ok(id) = template[start..start+end].parse::<usize>() {
+                        dynamic_slots.push(id);
+                    }
+                    scan_cursor = start + end;
+                } else { break; }
+            }
+
+            scan_cursor = 0;
+            while let Some(pos) = template[scan_cursor..].find("data-exba-evt-") {
+                let attr_start = scan_cursor + pos;
+                if let Some(eq_pos) = template[attr_start..].find("=\"") {
+                    let event_type = &template[attr_start+14..attr_start+eq_pos];
+                    let val_start = attr_start + eq_pos + 2;
+                    if let Some(val_end) = template[val_start..].find("\"") {
+                        let handler_id = &template[val_start..val_start+val_end];
+                        events.push(UIEvent {
+                            event_type: event_type.to_string(),
+                            handler_id: handler_id.to_string(),
+                        });
+                        scan_cursor = val_start + val_end;
+                    } else { break; }
+                } else { break; }
+            }
+
+            let result = UIBlueprint {
+                base_html: template.clone(),
+                dynamic_slots,
+                events,
+            };
+            
+            match serde_json::to_string(&result) {
+                Ok(json) => IRResult::Rules { schema: json },
+                Err(e) => IRResult::Error { message: format!("Blueprint error: {}", e) }
+            }
+        }
     }
 }
 
@@ -285,6 +486,7 @@ fn fibonacci_internal(n: i32) -> i32 {
 
 /// Internal implementation of Factorial.
 fn factorial_internal(n: i32) -> i32 {
+    if n <= 0 { return 1; }
     (1..=n).product()
 }
 

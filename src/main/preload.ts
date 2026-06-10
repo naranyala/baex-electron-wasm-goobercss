@@ -1,4 +1,5 @@
 import { ipcRenderer, contextBridge } from 'electron'
+import os from 'os'
 
 /**
  * The contextBridge exposes a secure API to the renderer process.
@@ -46,6 +47,19 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     /** Executes a read SQL query and returns the results. */
     query: (sql: string) => ipcRenderer.invoke('db:query', sql),
   },
+
+  /**
+   * System Information API
+   */
+  getSystemSnapshot: () => ({
+    os: os.type(),
+    kernel: os.release(),
+    arch: os.arch(),
+    cpu: os.cpus()[0].model,
+    uptime: os.uptime(),
+    total_mem: os.totalmem(),
+    free_mem: os.freemem(),
+  }),
 
   // You can expose other APTs you need here.
   // ...

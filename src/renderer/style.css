@@ -1,28 +1,18 @@
-*, *::before, *::after { box-sizing: border-box; }
-
-:root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.6;
-  font-weight: 400;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  display: block;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #0f0f11;
-  color: #f4f4f5;
-  overflow-x: hidden;
+  padding-top: 3rem;
+  background: #18181b;
+  color: #fafafa;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
 }
-
-#app {
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
-}
-

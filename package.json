@@ -8,6 +8,8 @@
     "dev:electron": "vite",
     "build:wasm": "cd core/rust && wasm-pack build --target web",
     "build": "tsc && vite build && electron-builder",
+    "build:win": "tsc && vite build && electron-builder --win",
+    "run:win": "wine \"release/$npm_package_version/YourAppName-Windows-$npm_package_version-Portable.exe\"",
     "preview": "vite preview",
     "test:frontend": "vitest run",
     "docs:gen": "bun run tools/api-doc-gen/src/index.ts",

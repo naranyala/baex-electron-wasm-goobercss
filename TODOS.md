@@ -2,128 +2,56 @@
 
 Tracking the evolution of the EXBA (Extended Browser API) framework.
 
-## Phase 1: Unified Reactivity & Signal-Driven Components (Core Rewire)
+## Phase 1: Core Reactivity (Completed)
+Established signal-based state and basic component lifecycle.
+- [x] ~~Proxy-based `ReactiveState`~~ — replaced by pure signals.
+- [x] Signal primitives: `createSignal`, `createEffect`, `createDerived`.
+- [x] `BaseComponent.update()` driven by `createEffect` with automatic dependency tracking.
 
-The Proxy-based reactivity system is replaced with native `createSignal` /
-`createEffect` primitives. Component state becomes signal-backed, and the
-`WasmBridge` outputs are wired into signals for a seamless reactive pipeline.
+## Phase 2: WASM Bridge & Data Flow (Completed)
+Implemented worker-based IR communication and typed API categories.
+- [x] `WorkerBridge` with request-response protocol.
+- [x] Intermediate Representation (IR) command/result pipeline.
+- [x] Bytecode compiler/executor in Rust for optimized execution.
+- [x] Aligned Rust/TS schemas (camelCase serialization).
 
-- [x] ~~Proxy-based `ReactiveState`~~ — removed in favour of signals
-- [x] `defineComponent` uses `createSignal` instead of `createReactiveState`
-- [x] `BaseComponent.update()` driven by `createEffect` tracking signal reads
-- [x] Component `mounted` callbacks use `el.setState()` instead of direct mutation
-- [x] `main.ts` state mutations use `setState()` instead of direct property set
-- [x] Example components fixed: import paths `framework/` → `core/ui/`
-- [x] Examples migrated from Proxy to signal-based state
-- [x] All `baex-*` renamed to `exba-*` (element tags, storage keys, log strings)
-- [x] `ReactiveState.test.ts` removed; remaining tests updated
-- [x] WasmBridge signal variants (types added, ready for Phase 2 use)
+## Phase 3: Framework Professionalization (Completed)
+Added Slot support, Context API, and standard lifecycle hooks.
+- [x] **Slot Support**: Composition via `<slot>`.
+- [x] **Context API**: `provide`/`inject` for deep state sharing.
+- [x] **Lifecycle Hooks**: `mounted`, `updated`, `unmounted`.
+- [x] **Error Boundaries**: Component-level render error catching.
+- [x] **Props Reactivity**: `observedAttributes` integration.
 
-## Phase 2: Targeted DOM & WASM Pipeline Optimization
+## Phase 4: Performance & Ergonomics (Completed)
+Maximized rendering speed and developer experience.
+- [x] **Tiered Rendering**: Rust-based `UIBlueprint` for $O(1)$ updates with TS fallback.
+- [x] **Deep-Reactive Stores**: Proxy-based state mapping to signals.
+- [x] **Recursive Templates**: Nested `html` tagged templates and array flattening.
+- [x] **Inline Events**: `@click=${handler}` syntax with automatic delegation.
+- [x] **Async Batching**: Update collapsing via `requestAnimationFrame`.
+- [x] **Windows Support**: Build scripts for NSIS/Portable and Wine execution.
+- [x] **Diagnostics**: Built-in "Web-Fetch" system information tool.
 
-### Completed
+## Phase 5: Production Readiness (Active)
+Focusing on scaling, testing, and native integration.
+- [ ] **E2E Testing**: Implement Playwright suite for full Rust-to-DOM validation.
+- [ ] **Native Hybridization**: Explore Node-Native Addons (napi-rs) for direct hardware access in Electron main.
+- [ ] **WASM Memory Pooling**: Pre-allocate and reuse WASM linear memory to reduce GC pressure.
+- [ ] **SharedArrayBuffer Bridge**: Zero-copy data transfer between JS and WASM Worker.
+- [ ] **Developer Tools**: Dedicated Chrome Extension or side-panel for signal/effect debugging.
 
-- [x] **Events system wired**: `defineComponent` now processes `events`
-      config via shadow-root event delegation. Handlers receive
-      `(e, { state, setState })`. Survives innerHTML re-renders.
-- [x] **disconnectedCallback**: `BaseComponent` cleans up effects on
-      disconnect. Custom cleanup hooks via `this._cleanups[]`.
-- [x] **Effect dependency tracking**: `createEffect` now tracks which
-      signals each effect subscribes to, enabling proper cleanup on
-      dispose.
-- [x] **adoptedStyleSheets**: `update()` converts inline `<style>` to
-      `CSSStyleSheet` and adopts it, improving encapsulation.
-- [x] **WASM→Signal→DOM demo**: `WasmDemo` example uses `createSignal`
-      + `bindSignal` to show targeted DOM updates from WASM results.
-- [x] **View component cleanup**: `DrawerView` uses `events` delegation
-      + `_cleanups` for global keydown listener. `TableView` uses
-      `events` pattern with `setState`.
+## Known Challenges & Technical Debt
+- **Vitest Environment**: Some WASM tests require heavy mocking in JSDOM due to `Web Worker` and `fetch` limitations.
+- **Style Injection**: Goober's global injection works great for Light DOM, but Shadow DOM components require manual `adoptedStyleSheets` management.
+- **Proxy Overhead**: Ensure large datasets are handled via "Shallow Stores" to avoid Proxy recursion.
 
-### Remaining
+---
 
-- [ ] **Targeted DOM patching**: Replace innerHTML swaps with a template
-      engine (lit-html / uhtml) that patches only changed nodes.
-- [ ] **Shadow-scoped goober**: Override goober's stylesheet target to
-      inject into `adoptedStyleSheets` per shadow root instead of global
-      `<head>`. Requires per-component `setup()` call.
-- [ ] **SharedArrayBuffer zero-copy bridge**: Replace JSON serialization
-      with binary SharedArrayBuffer transfer between JS and WASM Worker.
-- [ ] **Event system enhancement**: add `data-action` shorthand to the
-      events config so views can bind without writing selectors.
-- [ ] **E2E tests**: Playwright tests for the Rust-to-DOM pipeline.
-
-## Phase 3: Framework Professionalization (Core Architecture)
-
-This phase focuses on moving from simple "Configuration" to a "Contract"
-based framework, introducing primitives that handle complex UI state.
-
-- [x] **Targeted DOM Binding**: Implement a `bindings` config in
-      `ComponentDefinition` to use `bindText`, `bindAttr`, and `bindClass`
-      for surgical DOM updates.
-- [x] **Slot Support**: Implement `<slot>` support to allow component
-      composition (Container components).
-- [x] **Error Boundaries**: Add a mechanism to catch render errors and show
-      fallback UI per component.
-- [x] **Template Cloning**: Transition from `innerHTML` string returns to
-      cloning `<template>` elements to preserve DOM nodes and focus.
-- [x] **Props Management**: Full support for `observedAttributes` and prop
-      reactivity in `BaseComponent`.
-
-## Phase 4: UI/UX Enrichment (Interactions & Scale)
-
-Focuses on a rich library of interaction primitives and architectural
-scaling patterns.
-
-- [ ] **Interaction Primitives**: Implement `FocusTrap`, `KeyboardManager`,
-      and `Transition` (Enter/Leave) animation API.
-- [x] **Context API**: Implement `provide` and `inject` for deep state
-      distribution without prop-drilling.
-- [ ] **Primitives Library**: Expand `core/ui/Primitives.ts` with accessibility
-      and motion helpers.
-- [ ] **Performance Profiling**: Integrate WASM memory pooling and
-      selective signal subscriptions to reduce re-renders.
-
-## Future Improvements
-
-### Engine (High Priority)
-- **Template engine / lit-html integration**: (Integrated into Phase 3)
-- **Signal-based component state (deep signals)**: Instead of a single
-  signal for the entire state object, create signals for individual
-  properties so mutations to nested state don't trigger full re-renders.
-- **WasmBridge signal-first API**: Bridge methods return `{ get, peek }`
-  signals natively, so consumers can `bindSignal` directly without
-  manual Promise→signal wiring
-
-### DX (Medium Priority)
-- **Hot Module Replacement**: Wire Vite HMR for custom elements so
-  component edits reflect instantly.
-- **Developer Tools panel**: Enhance the existing EXBA DevTools modal
-  with live signal inspection, effect graph, and WASM call tracing.
-- **Component generator**: CLI or scaffold script to generate a new view
-  component skeleton.
-
-### Performance (Lower Priority)
-- **SharedArrayBuffer zero-copy**: (Moved to Phase 2)
-- **WASM memory pooling**: Pre-allocate WASM linear memory to avoid
-  repeated growth.
-- **Selective signal subscriptions**: Avoid re-running effects when
-  the signal value hasn't semantically changed (deep equality check).
-
-### Testing & Quality
-- [ ] Frontend coverage: integration tests for WasmBridge + WorkerBridge
-- [ ] E2E tests with Playwright (full Rust→DOM pipeline)
-- [ ] Rust-side: property-based testing for IR command roundtrips
-- [ ] Memory profiling for WASM linear memory heap
-
-## Current Test Status
-
-```
- Test Files:  8 passed | 3 failed (pre-existing)
-      Tests: 19 passed |  5 failed (pre-existing)
-```
-
-Known pre-existing failures:
-- `Advanced.test.ts` — WASM binary not loadable in jsdom/vitest
-- `WasmBridge.test.ts` — Worker mock timing issue
-- `TodoList.test.ts` — `should delete` — innerHTML loses event listeners
-  (solved by `events` system for new views)
+## Current Build Status
+| Target | Status | Notes |
+| :--- | :--- | :--- |
+| **Linux (AppImage)** | ✅ Stable | Primary development target. |
+| **Windows (Setup/Portable)** | ✅ Stable | Build via `npm run build:win`. |
+| **WASM (Web)** | ✅ Stable | Standard web target supported. |
+| **Testing** | ⚠️ Partial | Unit tests pass; E2E pending. |
