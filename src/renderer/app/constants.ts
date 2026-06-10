@@ -143,6 +143,39 @@ export const MENU_CATEGORIES = [
         },
       },
       {
+        id: 'date-picker',
+        label: 'Date Picker',
+        icon: '📅',
+        code: `// Date Picker`,
+        action: () => {
+          const container = document.getElementById('view-container');
+          if (container)
+            container.innerHTML = '<exba-date-picker></exba-date-picker>';
+        },
+      },
+      {
+        id: 'mindmap-cytoscape',
+        label: 'Cytoscape Mindmap',
+        icon: '🕸️',
+        code: `// Cytoscape Mindmap`,
+        action: () => {
+          const container = document.getElementById('view-container');
+          if (container)
+            container.innerHTML = '<exba-mindmap-cytoscape></exba-mindmap-cytoscape>';
+        },
+      },
+      {
+        id: 'mindmap-vis',
+        label: 'Vis Network Mindmap',
+        icon: '🔗',
+        code: `// Vis Network Mindmap`,
+        action: () => {
+          const container = document.getElementById('view-container');
+          if (container)
+            container.innerHTML = '<exba-mindmap-vis></exba-mindmap-vis>';
+        },
+      },
+      {
         id: 'activity',
         label: 'Activity Feed',
         icon: '🔔',

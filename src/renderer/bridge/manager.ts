@@ -1,5 +1,5 @@
-// @ts-ignore - Importing from public folder
-import init from './wasm_logic.js';
+// @ts-ignore - Importing from compiled Rust WASM package
+import init from '../../../core/rust/pkg/wasm_rust.js';
 import { EXBA } from '../framework/core/exba';
 
 const WASM_METHODS = [

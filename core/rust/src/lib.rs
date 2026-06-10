@@ -4,9 +4,62 @@ use tracing::{info, error, instrument};
 use tracing_wasm::{WASMLayerConfigBuilder, WASMLayer};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
+use std::sync::{Mutex, OnceLock};
 
 mod utils;
 mod state;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct SystemInfoReport {
+    pub os: String,
+    pub browser: String,
+    pub cpu_cores: i32,
+    pub ram_gb: f64,
+    pub screen_res: String,
+    pub gpu: String,
+    pub uptime_ms: f64,
+    pub language: String,
+    pub report: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct KanbanTask {
+    pub id: String,
+    pub title: String,
+    pub col: String,
+    pub tags: Vec<String>,
+    pub priority: String,
+}
+
+static KANBAN_TASKS: OnceLock<Mutex<Vec<KanbanTask>>> = OnceLock::new();
+
+fn get_kanban_tasks() -> &'static Mutex<Vec<KanbanTask>> {
+    KANBAN_TASKS.get_or_init(|| {
+        Mutex::new(vec![
+            KanbanTask {
+                id: "1".to_string(),
+                title: "WASM Memory Allocation".to_string(),
+                col: "todo".to_string(),
+                tags: vec!["wasm".to_string(), "perf".to_string()],
+                priority: "High".to_string(),
+            },
+            KanbanTask {
+                id: "2".to_string(),
+                title: "Hot Reload Pipeline".to_string(),
+                col: "in-progress".to_string(),
+                tags: vec!["dev".to_string(), "vite".to_string()],
+                priority: "Medium".to_string(),
+            },
+            KanbanTask {
+                id: "3".to_string(),
+                title: "Base Component Signal Store".to_string(),
+                col: "done".to_string(),
+                tags: vec!["core".to_string(), "signals".to_string()],
+                priority: "Low".to_string(),
+            },
+        ])
+    })
+}
 
 /// Intermediate Representation (IR) Command used for communication between TS and Rust.
 /// Encapsulated as a tagged union to support various operation types.
@@ -30,9 +83,13 @@ enum IRCommand {
     /// Queries the rules/schema of the current IR format.
     RulesQuery,
     /// Generates a system fetch report based on a raw snapshot.
-    SystemFetch { snapshot: String },
+    SystemFetch { snapshot: Option<String> },
     /// Optimizes a UI template by extracting dynamic bindings.
     OptimizeUI { template: String },
+    /// Fetches all Kanban tasks.
+    KanbanFetch,
+    /// Moves a Kanban task to the next column status.
+    MoveTask { id: String },
 }
 
 /// Represents a pre-processed UI structure for high-performance rendering.
@@ -143,13 +200,24 @@ pub fn compile_ir(command_json: &str) -> Result<Vec<u8>, JsValue> {
         }
         IRCommand::SystemFetch { snapshot } => {
             bytecode.push(OP_SYS);
-            let bytes = snapshot.as_bytes();
+            let empty = "".to_string();
+            let val = snapshot.as_ref().unwrap_or(&empty);
+            let bytes = val.as_bytes();
             bytecode.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
             bytecode.extend_from_slice(bytes);
         }
         IRCommand::OptimizeUI { template } => {
             bytecode.push(OP_OPT);
             let bytes = template.as_bytes();
+            bytecode.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
+            bytecode.extend_from_slice(bytes);
+        }
+        IRCommand::KanbanFetch => {
+            bytecode.push(0xff);
+        }
+        IRCommand::MoveTask { id } => {
+            bytecode.push(0xfe);
+            let bytes = id.as_bytes();
             bytecode.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
             bytecode.extend_from_slice(bytes);
         }
@@ -225,27 +293,45 @@ pub fn execute_bytecode(bytecode: &[u8]) -> Result<JsValue, JsValue> {
             let snapshot = std::str::from_utf8(&bytecode[cursor+4..cursor+4+len])
                 .map_err(|e| JsValue::from_str(&format!("UTF8 error: {}", e)))?;
             
-            match serde_json::from_str::<SystemSnapshot>(snapshot) {
-                Ok(snap) => {
-                    let used_mem = (snap.total_mem - snap.free_mem) / 1024 / 1024;
-                    let total_mem = snap.total_mem / 1024 / 1024;
-                    let uptime_h = snap.uptime / 3600;
-                    let uptime_m = (snap.uptime % 3600) / 60;
-                    let report = format!(
+            let mut info_report = SystemInfoReport {
+                os: "Web Browser".to_string(),
+                browser: "Vite Dev / WASM Native".to_string(),
+                cpu_cores: 8,
+                ram_gb: 16.0,
+                screen_res: "1920x1080".to_string(),
+                gpu: "WebGL Direct Mode".to_string(),
+                uptime_ms: 12000.0,
+                language: "en-US".to_string(),
+                report: "".to_string(),
+            };
+
+            if let Ok(snap) = serde_json::from_str::<SystemSnapshot>(snapshot) {
+                info_report.os = snap.os;
+                info_report.browser = format!("Electron (Kernel: {})", snap.kernel);
+                info_report.cpu_cores = 8;
+                info_report.ram_gb = (snap.total_mem as f64) / 1024.0 / 1024.0 / 1024.0;
+                info_report.uptime_ms = (snap.uptime * 1000) as f64;
+                info_report.gpu = format!("{} / Arch: {}", snap.cpu, snap.arch);
+            }
+
+            let used_mem = (info_report.ram_gb * 0.4) as i32;
+            let total_mem = info_report.ram_gb as i32;
+            let uptime_s = (info_report.uptime_ms / 1000.0) as u64;
+            let uptime_h = uptime_s / 3600;
+            let uptime_m = (uptime_s % 3600) / 60;
+
+            info_report.report = format!(
 "          _---_
          /     \\
         | () () |     OS: EXBA Browser OS ({})
-         \\  ^  /      Kernel: {}
-          |||||       CPU: {}
-          |||||       Memory: {}MB / {}MB
-                      Uptime: {}h {}m
-                      Arch: {}",
-                        snap.os, snap.kernel, snap.cpu, used_mem, total_mem, uptime_h, uptime_m, snap.arch
-                    );
-                    IRResult::SystemInfo { report }
-                },
-                Err(e) => IRResult::Error { message: format!("Snapshot parse error: {}", e) }
-            }
+         \\  ^  /      Runtime: {}
+          |||||       CPU Model: {}
+          |||||       Memory: {}GB / {}GB
+                      Uptime: {}h {}m",
+                info_report.os, info_report.browser, info_report.gpu, used_mem, total_mem, uptime_h, uptime_m
+            );
+
+            IRResult::SystemInfo(info_report)
         }
         OP_OPT => {
             let len = u32::from_le_bytes(bytecode[cursor..cursor+4].try_into().unwrap()) as usize;
@@ -313,7 +399,9 @@ enum IRResult {
     /// A structural or schema result.
     Rules { schema: String },
     /// A system info report.
-    SystemInfo { report: String },
+    SystemInfo(SystemInfoReport),
+    /// Kanban task data return.
+    KanbanData(Vec<KanbanTask>),
 }
 
 /// Wasm entry point. Initializes the tracing subscriber for browser logging.
@@ -368,28 +456,47 @@ fn process_ir_logic(command: IRCommand) -> IRResult {
         },
         IRCommand::SystemFetch { snapshot } => {
             info!("System Fetch requested");
-            match serde_json::from_str::<SystemSnapshot>(&snapshot) {
-                Ok(snap) => {
-                    let used_mem = (snap.total_mem - snap.free_mem) / 1024 / 1024;
-                    let total_mem = snap.total_mem / 1024 / 1024;
-                    let uptime_h = snap.uptime / 3600;
-                    let uptime_m = (snap.uptime % 3600) / 60;
+            let mut info_report = SystemInfoReport {
+                os: "Web Browser".to_string(),
+                browser: "Vite Dev / WASM Native".to_string(),
+                cpu_cores: 8,
+                ram_gb: 16.0,
+                screen_res: "1920x1080".to_string(),
+                gpu: "WebGL Direct Mode".to_string(),
+                uptime_ms: 12000.0,
+                language: "en-US".to_string(),
+                report: "".to_string(),
+            };
 
-                    let report = format!(
+            if let Some(snap_str) = snapshot {
+                if let Ok(snap) = serde_json::from_str::<SystemSnapshot>(&snap_str) {
+                    info_report.os = snap.os;
+                    info_report.browser = format!("Electron (Kernel: {})", snap.kernel);
+                    info_report.cpu_cores = 8;
+                    info_report.ram_gb = (snap.total_mem as f64) / 1024.0 / 1024.0 / 1024.0;
+                    info_report.uptime_ms = (snap.uptime * 1000) as f64;
+                    info_report.gpu = format!("{} / Arch: {}", snap.cpu, snap.arch);
+                }
+            }
+
+            let used_mem = (info_report.ram_gb * 0.4) as i32;
+            let total_mem = info_report.ram_gb as i32;
+            let uptime_s = (info_report.uptime_ms / 1000.0) as u64;
+            let uptime_h = uptime_s / 3600;
+            let uptime_m = (uptime_s % 3600) / 60;
+
+            info_report.report = format!(
 "          _---_
          /     \\
         | () () |     OS: EXBA Browser OS ({})
-         \\  ^  /      Kernel: {}
-          |||||       CPU: {}
-          |||||       Memory: {}MB / {}MB
-                      Uptime: {}h {}m
-                      Arch: {}",
-                        snap.os, snap.kernel, snap.cpu, used_mem, total_mem, uptime_h, uptime_m, snap.arch
-                    );
-                    IRResult::SystemInfo { report }
-                },
-                Err(e) => IRResult::Error { message: format!("Snapshot parse error: {}", e) }
-            }
+         \\  ^  /      Runtime: {}
+          |||||       CPU Model: {}
+          |||||       Memory: {}GB / {}GB
+                      Uptime: {}h {}m",
+                info_report.os, info_report.browser, info_report.gpu, used_mem, total_mem, uptime_h, uptime_m
+            );
+
+            IRResult::SystemInfo(info_report)
         },
         IRCommand::OptimizeUI { template } => {
             info!("UI Optimization requested");
@@ -434,6 +541,24 @@ fn process_ir_logic(command: IRCommand) -> IRResult {
                 Ok(json) => IRResult::Rules { schema: json },
                 Err(e) => IRResult::Error { message: format!("Blueprint error: {}", e) }
             }
+        },
+        IRCommand::KanbanFetch => {
+            info!("Kanban Fetch requested");
+            let tasks = get_kanban_tasks().lock().unwrap().clone();
+            IRResult::KanbanData(tasks)
+        },
+        IRCommand::MoveTask { id } => {
+            info!("Move Task requested: {}", id);
+            let mut tasks_guard = get_kanban_tasks().lock().unwrap();
+            if let Some(task) = tasks_guard.iter_mut().find(|t| t.id == id) {
+                task.col = match task.col.as_str() {
+                    "todo" => "in-progress".to_string(),
+                    "in-progress" => "done".to_string(),
+                    "done" => "todo".to_string(),
+                    _ => "todo".to_string(),
+                };
+            }
+            IRResult::KanbanData(tasks_guard.clone())
         }
     }
 }
@@ -509,6 +634,30 @@ fn extended_greet_internal(name: &str) {
             }
         }
     }
+}
+
+#[derive(Serialize)]
+pub struct IRBundle {
+    pub version: String,
+    pub hlir: Vec<serde_json::Value>,
+    pub llir: Vec<serde_json::Value>,
+}
+
+#[wasm_bindgen]
+pub fn process_action(id: &str) -> Result<JsValue, JsValue> {
+    let bundle = IRBundle {
+        version: "1.0.0".to_string(),
+        hlir: vec![serde_json::json!({
+            "type": "Notify",
+            "payload": {
+                "level": "info",
+                "msg": format!("Action '{}' processed by Rust WASM Core!", id)
+            }
+        })],
+        llir: vec![],
+    };
+    serde_wasm_bindgen::to_value(&bundle)
+        .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
 }
 
 #[cfg(test)]

@@ -105,3 +105,61 @@ pub fn get_app_state() -> Result<JsValue, JsValue> {
     let state = store.get_state();
     serde_wasm_bindgen::to_value(&state).map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
 }
+
+/// Compatibility wrapper for frontend wasm_get_app_state
+#[wasm_bindgen]
+pub fn wasm_get_app_state() -> Result<JsValue, JsValue> {
+    get_app_state()
+}
+
+/// Compatibility wrapper for frontend wasm_update_app_state
+#[wasm_bindgen]
+pub fn wasm_update_app_state(patch_json: &str) -> Result<JsValue, JsValue> {
+    let patch: serde_json::Value = serde_json::from_str(patch_json)
+        .map_err(|e| JsValue::from_str(&format!("Patch parse error: {}", e)))?;
+        
+    let mut store = get_store().lock().map_err(|_| JsValue::from_str("Mutex lock failed"))?;
+    
+    if let Some(obj) = patch.as_object() {
+        for (key, val) in obj {
+            match key.as_str() {
+                "userName" | "user_name" => {
+                    if let Some(name) = val.as_str() {
+                        store.dispatch(AppCommand::SetUserName { name: name.to_string() });
+                    }
+                }
+                "theme" => {
+                    if let Some(theme) = val.as_str() {
+                        store.dispatch(AppCommand::SetTheme { theme: theme.to_string() });
+                    }
+                }
+                "projectName" | "project_name" => {
+                    if let Some(name) = val.as_str() {
+                        store.dispatch(AppCommand::SetProjectName { name: name.to_string() });
+                    }
+                }
+                "isLoading" | "is_loading" => {
+                    if let Some(loading) = val.as_bool() {
+                        store.dispatch(AppCommand::SetLoading { loading });
+                    }
+                }
+                "notifications" => {
+                    if let Some(msg) = val.as_str() {
+                        store.dispatch(AppCommand::AddNotification { message: msg.to_string() });
+                    } else if let Some(arr) = val.as_array() {
+                        for item in arr {
+                            if let Some(msg) = item.as_str() {
+                                store.dispatch(AppCommand::AddNotification { message: msg.to_string() });
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    
+    let updated_state = store.get_state();
+    serde_wasm_bindgen::to_value(&updated_state).map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+}
+
