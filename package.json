@@ -6,14 +6,15 @@
   "scripts": {
     "dev": "VITE_NO_ELECTRON=1 vite",
     "dev:electron": "vite",
-    "build:wasm": "cd core/rust && wasm-pack build --target web",
+    "build:wasm": "cd src/wasm && wasm-pack build --target web",
     "build": "tsc && vite build && electron-builder",
     "build:win": "tsc && vite build && electron-builder --win",
     "run:win": "wine \"release/$npm_package_version/YourAppName-Windows-$npm_package_version-Portable.exe\"",
     "preview": "vite preview",
     "test:frontend": "vitest run",
-    "docs:gen": "bun run tools/api-doc-gen/src/index.ts",
-    "docs:serve": "bun x serve ."
+    "docs:gen": "cd tools/docs && npm run build",
+    "docs:serve": "bun x serve api-docs-dist",
+    "docs:dev": "cd tools/docs && npm run dev"
   },
   "devDependencies": {
     "@types/cytoscape": "^3.21.9",

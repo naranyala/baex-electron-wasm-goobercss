@@ -1,0 +1,20 @@
+{
+  "public": ".",
+  "rewrites": [
+    { "source": "/api-docs", "destination": "/api-docs.html" }
+  ],
+  "headers": [
+    {
+      "source": "**/*.js",
+      "headers": [{ "key": "Content-Type", "value": "application/javascript" }]
+    },
+    {
+      "source": "**/*.mjs",
+      "headers": [{ "key": "Content-Type", "value": "application/javascript" }]
+    },
+    {
+      "source": "**/*.wasm",
+      "headers": [{ "key": "Content-Type", "value": "application/wasm" }]
+    }
+  ]
+}

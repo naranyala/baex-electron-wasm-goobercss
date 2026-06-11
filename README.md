@@ -1,79 +1,176 @@
-# EXBA: Extended Browser API
+# EXBA: Extended Browser Api
 
 EXBA is a high-performance framework for building browser-native Web Components powered by WebAssembly compiled from Rust and signal-based reactivity.
 
-The name stands for Extended Browser API - based on the philosophy that the browser's native capabilities (Custom Elements, Shadow DOM, CSS-in-JS) should be extended with Rust/WebAssembly-backed computation without heavy framework lock-in.
+The name stands for Extended Browser Api - based on the philosophy that the browser's native capabilities (Custom Elements, Shadow DOM, CSS-in-JS) should be extended with Rust/WebAssembly-backed computation without heavy framework lock-in.
 
 ---
 
-## Key Features
+## Core Philosophy
 
-### 1. Tiered Rendering Architecture
-EXBA utilizes a dual-tier rendering engine to maximize performance:
-* **Tier 1 (Rust-WASM):** Automatically generates UIBlueprints by parsing templates in Rust. This enables high-performance direct DOM updates and pre-compiled event wiring.
-* **Tier 2 (TypeScript Fallback):** A JavaScript-based engine that ensures the application renders correctly even during WASM initialization or in restricted browser environments.
-
-### 2. Deep-Reactive Proxy Stores
-EXBA components use a Proxy-based state mapping directly to fine-grained signals.
-* **Declarative Mutation:** State changes automatically trigger batched, high-performance re-renders.
-* **Automatic Dependency Tracking:** Components only re-render when the specific properties they access are modified.
-
-### 3. Unified Custom Component Specification
-Components extend the base `ExbaComponent` class, providing:
-* **Static Scoped Styling:** Scoped CSS styles defined as key-value objects or strings using Tailwind-compatible variables.
-* **Observed Attributes:** Reactively bound inputs mapped to class properties.
-* **Unified Event Delegation:** Clean handling of element events directly inside templates.
-
-### 4. Interactive Graph & Component Demos
-The framework includes implementation demonstrations for complex UI controls:
-* **Cytoscape.js Mindmap:** Explores hierarchical structures using layout algorithms, node selection details, and base64 PNG exports.
-* **Vis-network Mindmap:** Displays bouncing nodes utilizing dynamic physics options, live toggles, and canvas image generation.
-* **DatePicker Component:** A monthly viewed date picker featuring custom navigation controls and event emitting.
-
-### 5. Native Diagnostics
-Includes a built-in system fetch tool. It gathers raw hardware data from Electron and processes it through the Rust WebAssembly engine to generate detailed system reports.
+1. **Native First:** Leverage standard browser APIs (Custom Elements, Shadow DOM) rather than heavy runtime abstractions.
+2. **Rust-Powered:** Offload heavy logic, state management, and template optimization to a high-performance Rust core compiled to WASM.
+3. **Signal Reactivity:** Use fine-grained signals and batched effects to perform surgical DOM updates without full tree reconciliations.
+4. **Tiered Resilience:** Always provide a TypeScript fallback (Tier 2) to ensure functionality even if the WASM engine (Tier 1) fails to initialize.
 
 ---
 
-## Architecture
+## Technical Architecture
 
-```
-  View Layer        Custom Elements + Optional Shadow DOM + CSS-in-JS
-  Reactivity Layer  createStore (Proxy) + createSignal + createEffect (Batched)
-  Bridge Layer      WASM Bridge + Typed Command Dispatcher
-  WASM Layer        Rust Core (AppState + UIBlueprint + Optimization Engine)
-```
+### 1. Component Specification
+All components extend the `ExbaComponent` base class, which provides shadow DOM isolation and reactive life-cycle hooks.
 
----
+```typescript
+import { ExbaComponent, type ComponentProps } from '../framework/core/component';
 
-## Development
+export class MyComponent extends ExbaComponent {
+  // Define observed attributes and their types
+  static props: ComponentProps = {
+    count: 'number',
+    user: 'string'
+  };
 
-Install the project dependencies first, then execute the required scripts:
+  // Scoped CSS-in-JS styling
+  static styles = {
+    card: 'padding: 1rem; border: 1px solid #333; border-radius: 8px;',
+    title: 'font-size: 1.25rem; font-weight: bold; color: var(--exba-primary);'
+  };
 
-```bash
-# Start Vite development server (browser only)
-npm run dev
+  // Lifecycle hook for initial setup
+  protected onMount() {
+    console.log('Component mounted');
+  }
 
-# Start Vite + Electron wrapper
-npm run dev:electron
+  // Reactive render method
+  render() {
+    return `
+      <div class="card">
+        <h1 class="title">Hello, ${this.state.user}</h1>
+        <p>Count: ${this.state.count}</p>
+        <button onclick="this.getRootNode().host.setState({ count: this.state.count + 1 })">
+          Increment
+        </button>
+      </div>
+    `;
+  }
+}
 
-# Compile Rust core to WebAssembly
-npm run build:wasm
-
-# Full production build (TypeScript compile + Vite build + Electron package)
-npm run build
-
-# Run frontend test suite
-npm run test:frontend
+customElements.define('my-component', MyComponent);
 ```
 
+### 2. Signal-based Reactivity
+The framework provides an atomic reactivity system for managing both global and local state.
+
+```typescript
+import { EXBA } from '../framework/core/exba';
+
+// Create a reactive signal
+const count = EXBA.createSignal(0);
+
+// Create a derived computed signal
+const double = EXBA.createComputed(() => count.value * 2, [count.key]);
+
+// Register an effect (auto-cleaned up in ExbaComponent)
+const unsubscribe = count.subscribe((val) => {
+  console.log(`The count is now: ${val}`);
+});
+
+// Update the value
+count.value += 1;
+
+// Batch multiple updates to prevent intermediate renders
+EXBA.batch(() => {
+  count.value = 10;
+  count.value = 20; // Only one notification will be sent
+});
+```
+
+### 3. Rust WASM Integration
+Heavy lifting and application logic reside in the Rust core.
+
+```rust
+use wasm_bindgen::prelude::*;
+
+// High-performance computation in Rust
+#[wasm_bindgen]
+pub fn fibonacci(n: i32) -> i32 {
+    if n <= 1 { return n; }
+    let mut a = 0; b = 1;
+    for _ in 0..n {
+        let temp = a + b;
+        a = b;
+        b = temp;
+    }
+    a
+}
+
+// Global State mutation through IR (Intermediate Representation)
+#[wasm_bindgen]
+pub fn wasm_update_app_state(patch_json: &str) -> Result<JsValue, JsValue> {
+    // Rust logic to validate and apply state changes
+    // ...
+}
+```
+
+### 4. Typed Bridge Communication
+Communication between TypeScript and Rust is handled through a secure, typed bridge.
+
+```typescript
+import { EXBA } from '../framework/core/exba';
+
+// Call a WASM function through the bridge
+const result = await EXBA.callBridge<number>('fibonacci', 10);
+
+// Use the proxied API for cleaner calls
+const state = await EXBA.api.wasm_get_app_state();
+
+// Dispatch a UI action that returns a rendering instruction (IRBundle)
+await EXBA.api.process_action('init_dashboard');
+```
+
 ---
 
-## Framework Contract
+## Directory Structure
 
-| Feature | Pattern | Benefit |
-| :--- | :--- | :--- |
-| **State** | `createStore(initialState)` | Proxy-based, intuitive, deep reactivity. |
-| **Events** | Class-method or DOM actions | Scoped event handlers, self-contained. |
-| **Styles** | Scoped class mappings | Theme integration and styling encapsulation. |
-| **Performance** | Tiered Rendering | WebAssembly execution speeds with JS fallbacks. |
+```text
+.
+├── src/
+│   ├── app/           # Frontend Application (UI, Styles, Entry)
+│   ├── framework/     # EXBA Core Library (DOM, Reactivity, Router)
+│   ├── desktop/       # Electron Main and Preload Scripts
+│   ├── wasm/          # Rust WebAssembly Engine
+│   └── native/        # Native Node.js Addons (SQLite)
+├── tools/
+│   └── docs/          # Rsbuild-powered API Documentation Generator
+├── api-docs-dist/     # Compiled production documentation
+└── public/            # Shared static assets
+```
+
+---
+
+## Development Workflow
+
+### Requirements
+- Node.js (Latest LTS)
+- Bun (Optional, for faster tool execution)
+- Rust and wasm-pack
+
+### Scripts
+
+| Command | Description |
+| :--- | :--- |
+| `npm run build:wasm` | Compiles the Rust core into WebAssembly assets. |
+| `npm run dev` | Starts the Vite development server in the browser. |
+| `npm run dev:electron` | Launches the full Electron application with HMR. |
+| `npm run build` | Full production build (WASM -> TSC -> Vite -> Electron Builder). |
+| `npm run docs:gen` | Regenerates the optimized API documentation site. |
+| `npm run docs:dev` | Starts the documentation site dev server. |
+
+---
+
+## Communication Contract
+
+The framework adheres to a strict JSON-based communication contract:
+1. **SSOT:** The Rust layer is the single source of truth for complex application state.
+2. **JSON Only:** All cross-boundary calls pass serialized JSON data.
+3. **IR Protocol:** Rust returns an IRBundle containing HLIR (High-level semantic effects) and LLIR (Low-level DOM instructions).

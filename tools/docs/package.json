@@ -1,0 +1,20 @@
+{
+  "name": "api-doc-gen",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "gen:data": "bun run src/index.ts",
+    "dev": "rsbuild dev",
+    "build": "npm run gen:data && rsbuild build"
+  },
+  "dependencies": {
+    "glob": "^10.3.10"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^2.0.11",
+    "@rsbuild/plugin-type-check": "^1.4.0",
+    "@types/glob": "^9.0.0",
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3"
+  }
+}
