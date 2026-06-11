@@ -48,7 +48,7 @@ export class CodeBlockComponent extends ExbaComponent {
         // Keywords
         .replace(/\b(abstract|async|await|boolean|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|false|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|native|new|null|package|private|protected|public|return|set|static|super|switch|this|throw|true|try|type|typeof|var|void|while|with|yield|any|number|string|symbol|unknown)\b/g, `<span style="color: ${t.indigo400}">$1</span>`)
         // Framework Globals / Core Classes
-        .replace(/\b(EXBA|ExbaComponent|Router|ReactiveStateProxy|IRProcessor|ResilienceManager|Context|ThemeProvider|html|patch|createSignal|createComputed|batch)\b/g, `<span style="color: ${t.emerald400}">$1</span>`)
+        .replace(/\b(EXBA|ExbaComponent|Router|ReactiveStateProxy|IRProcessor|ResilienceManager|Context|ThemeProvider|html|patch|signal|memo|computed|batch|effect|untrack|on)\b/g, `<span style="color: ${t.emerald400}">$1</span>`)
         // Decorators
         .replace(/@\w+/g, `<span style="color: ${t.indigo300}">$&</span>`)
         // Strings

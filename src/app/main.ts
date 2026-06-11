@@ -24,6 +24,8 @@ import '../examples/ui/code-block';
 import '../examples/ui/date-picker';
 import '../examples/integrations/mindmap-cytoscape';
 import '../examples/integrations/mindmap-vis';
+import '../examples/integrations/vega-charts';
+import '../examples/integrations/audio-waveform';
 import '../examples/browser/audio-demo';
 import '../examples/browser/canvas-demo';
 import '../examples/browser/storage-demo';

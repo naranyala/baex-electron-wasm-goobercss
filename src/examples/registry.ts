@@ -35,7 +35,7 @@ export const EXAMPLE_REGISTRY: ExamplePlugin[] = [
  */
 @customElement('user-greeting')
 export class UserGreeting extends ExbaComponent {
-  private count = EXBA.createSignal(0);
+  private count = EXBA.signal(0);
 
   render() {
     return html\`
@@ -161,7 +161,7 @@ pub fn fibonacci(n: i32) -> i32 {
   // --- Integrations ---
   {
     id: 'leaflet-turf',
-    label: 'Spatial Intelligence',
+    label: 'Leaflet.js Example',
     icon: '🌍',
     path: '/leaflet-turf',
     component: 'exba-leaflet-turf',
@@ -179,7 +179,7 @@ pub fn fibonacci(n: i32) -> i32 {
   },
   {
     id: 'mindmap-vis',
-    label: 'Vis Network Mindmap',
+    label: 'vis-network example (mindmap)',
     icon: '🔗',
     path: '/mindmap-vis',
     component: 'exba-mindmap-vis',
@@ -194,6 +194,24 @@ pub fn fibonacci(n: i32) -> i32 {
     component: 'exba-analytics',
     category: 'integration',
     action: (c) => c.innerHTML = '<exba-analytics></exba-analytics>'
+  },
+  {
+    id: 'vega-charts',
+    label: 'Vega Charts (Pie, Radar, Bar)',
+    icon: '📈',
+    path: '/vega-charts',
+    component: 'exba-vega-charts',
+    category: 'integration',
+    action: (c) => c.innerHTML = '<exba-vega-charts></exba-vega-charts>'
+  },
+  {
+    id: 'audio-waveform',
+    label: 'Audio Waveform Player',
+    icon: '🎵',
+    path: '/audio-waveform',
+    component: 'exba-audio-waveform',
+    category: 'integration',
+    action: (c) => c.innerHTML = '<exba-audio-waveform></exba-audio-waveform>'
   },
 
   // --- Browser APIs ---
@@ -268,14 +286,14 @@ pub fn fibonacci(n: i32) -> i32 {
 export function getMenuCategories() {
   return [
     {
-      id: 'component-examples',
-      label: 'Component Examples',
-      items: EXAMPLE_REGISTRY.filter(e => e.category === 'ui')
-    },
-    {
       id: 'component-integration',
       label: 'Component Integration',
       items: EXAMPLE_REGISTRY.filter(e => e.category === 'integration')
+    },
+    {
+      id: 'component-examples',
+      label: 'Component Examples',
+      items: EXAMPLE_REGISTRY.filter(e => e.category === 'ui')
     },
     {
       id: 'browser-api',

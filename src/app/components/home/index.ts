@@ -78,19 +78,41 @@ export class HomeComponent extends ExbaComponent {
       );
       if (categoryItems.length === 0) return '';
 
+      // Determine initial collapsed state
+      const isCollapsed = category.id === 'component-examples' || category.id === 'browser-api';
+      const bodyDisplay = isCollapsed ? 'none' : 'block';
+      const arrowRotation = isCollapsed ? 'transform: rotate(0deg);' : 'transform: rotate(180deg);';
+
       return `
-        <div class="${styles.categoryTitle}">${category.label}</div>
-        <div class="${styles.menuGrid}">
-          ${categoryItems
-            .map(
-              (item: any) => `
-            <div class="${styles.menuItem}" onclick="window.dispatchMenuAction('${item.id}')">
-              <div class="${styles.menuItemIcon}">${item.icon}</div>
-              <div class="${styles.menuItemLabel}">${item.label}</div>
+        <div class="${styles.sectionCard}" style="margin-bottom: 1.5rem; width: 100%; max-width: 720px;">
+          <div class="${styles.sectionHeader}" onclick="
+            const body = this.nextElementSibling;
+            const arrow = this.querySelector('span');
+            if (body.style.display === 'none') {
+              body.style.display = 'block';
+              arrow.style.transform = 'rotate(180deg)';
+            } else {
+              body.style.display = 'none';
+              arrow.style.transform = 'rotate(0deg)';
+            }
+          ">
+            <div class="${styles.sectionTitle}">${category.label}</div>
+            <span class="${styles.sectionArrow}" style="${arrowRotation}">▼</span>
+          </div>
+          <div class="${styles.sectionBody}" style="display: ${bodyDisplay};">
+            <div class="${styles.menuGrid}" style="max-width: none; margin: 0;">
+              ${categoryItems
+                .map(
+                  (item: any) => `
+                <div class="${styles.menuItem}" onclick="window.dispatchMenuAction('${item.id}')">
+                  <div class="${styles.menuItemIcon}">${item.icon}</div>
+                  <div class="${styles.menuItemLabel}">${item.label}</div>
+                </div>
+              `,
+                )
+                .join('')}
             </div>
-          `,
-            )
-            .join('')}
+          </div>
         </div>
       `;
     }).join('');

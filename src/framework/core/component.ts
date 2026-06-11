@@ -295,11 +295,43 @@ export abstract class ExbaComponent extends HTMLElement {
    * @param key Optional unique key.
    */
   protected useSignal<T>(initialValue: T, key?: string) {
-    const signal = EXBA.createSignal(initialValue, key);
+    const signal = EXBA.signal(initialValue, key);
     this.createEffect(signal.key, (_val) => {
-        // Force update when signal changes if it's not already handled by local state
         this.safeUpdate();
     });
     return signal;
+  }
+
+  /**
+   * Creates a lazy memoized value that only recalculates when read.
+   * Dependencies are auto-tracked. Only triggers re-render if value changes.
+   * @param fn The derivation function.
+   */
+  protected useMemo<T>(fn: () => T) {
+    const memo = EXBA.memo(fn);
+    this.createEffect(memo.key, () => {
+      this.safeUpdate();
+    });
+    return memo;
+  }
+
+  /**
+   * Creates a reactive effect scoped to this component's lifecycle.
+   * Auto-tracks dependencies. Cleans up on unmount.
+   * @param fn The effect function.
+   */
+  protected useEffect(fn: () => void | (() => void)) {
+    const unsub = EXBA.createEffect(fn);
+    this.activeSubscriptions.push(unsub);
+    return unsub;
+  }
+
+  /**
+   * Reads a signal value without creating a subscription.
+   * Use inside effects or memos to avoid unwanted tracking.
+   * @param signal The signal to read.
+   */
+  protected untrack<T>(signal: { value: T }): T {
+    return EXBA.untrack(signal);
   }
 }
