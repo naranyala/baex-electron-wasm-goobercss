@@ -1,5 +1,5 @@
-import { ExbaComponent } from '../../../framework/core/component';
-import { ease, t } from '../../styles';
+import { ExbaComponent } from '../../framework/core/component';
+import { ease, t } from '../../app/styles';
 
 /**
  * A collapsible accordion component for organizing content into expandable sections.

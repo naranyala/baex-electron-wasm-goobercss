@@ -1,5 +1,5 @@
-import { ExbaComponent, type ComponentProps } from '../../../framework/core/component';
-import { t, ease, styles as globalStyles } from '../../styles';
+import { ExbaComponent, type ComponentProps } from '../../framework/core/component';
+import { t, ease, styles as globalStyles } from '../../app/styles';
 
 /**
  * A sophisticated code block component with syntax highlighting and copy-to-clipboard.

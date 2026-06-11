@@ -1,5 +1,5 @@
-import { ExbaComponent, type ComponentProps } from '../../../framework/core/component';
-import { ease, t } from '../../styles';
+import { ExbaComponent, type ComponentProps } from '../../framework/core/component';
+import { ease, t } from '../../app/styles';
 
 const STYLES = `
   .container {

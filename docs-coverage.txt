@@ -1,2 +1,2 @@
-EXBA Documentation Coverage: 7.1%
-Generated: 6/11/2026, 11:11:11 AM
+EXBA Documentation Coverage: 7.2%
+Generated: 6/11/2026, 11:35:34 AM

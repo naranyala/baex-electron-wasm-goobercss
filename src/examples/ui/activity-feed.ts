@@ -1,6 +1,6 @@
-import { ExbaComponent } from '../../../framework/core/component';
-import { EXBA } from '../../../framework/core/exba';
-import { ease, t } from '../../styles';
+import { ExbaComponent } from '../../framework/core/component';
+import { EXBA } from '../../framework/core/exba';
+import { ease, t } from '../../app/styles';
 
 /**
  * A real-time activity feed component that aggregates events from across the system.

@@ -56,10 +56,18 @@ export abstract class ExbaComponent extends HTMLElement {
 
   /**
    * Returns an array of attribute names to monitor for changes.
-   * Derived from the static `props` definition.
+   * Derived from the static `props` definition and includes lowercase/kebab-case variations.
    */
   static get observedAttributes() {
-    return Object.keys((this as any).props || {});
+    const keys = Object.keys((this as any).props || {});
+    const attrs = new Set<string>();
+    keys.forEach(key => {
+      attrs.add(key);
+      attrs.add(key.toLowerCase());
+      const kebab = key.replace(/[A-Z]/g, m => `-${m.toLowerCase()}`);
+      attrs.add(kebab);
+    });
+    return Array.from(attrs);
   }
 
   /**
@@ -73,7 +81,10 @@ export abstract class ExbaComponent extends HTMLElement {
   ) {
     if (oldValue === newValue) return;
 
-    const propType = (this.constructor as typeof ExbaComponent).props[name];
+    const props = (this.constructor as typeof ExbaComponent).props;
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const propKey = Object.keys(props).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanName) || name;
+    const propType = props[propKey];
     let value: any = newValue;
 
     if (propType) {
@@ -94,7 +105,7 @@ export abstract class ExbaComponent extends HTMLElement {
       }
     }
 
-    this.setState({ [name]: value });
+    this.setState({ [propKey]: value });
   }
 
   /**

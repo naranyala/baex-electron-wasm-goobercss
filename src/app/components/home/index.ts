@@ -1,6 +1,7 @@
-import { MENU_CATEGORIES, MENU_ITEMS } from '../../layouts/constants';
-import { ExbaComponent } from '../../../framework/core/component';
+import { MENU_CATEGORIES } from '../../layouts/constants';
 import { styles } from '../../styles';
+import { ExbaComponent } from '../../../framework/core/component';
+import { EXAMPLE_REGISTRY } from '../../../examples/registry';
 
 /**
  * The primary dashboard component for the application.
@@ -46,7 +47,7 @@ export class HomeComponent extends ExbaComponent {
     if (searchEl) {
       searchEl.addEventListener('input', (e) => {
         const query = (e.target as HTMLInputElement).value;
-        const filtered = MENU_ITEMS.filter(item => 
+        const filtered = EXAMPLE_REGISTRY.filter((item: any) => 
           item.label.toLowerCase().includes(query.toLowerCase()) ||
           item.id.toLowerCase().includes(query.toLowerCase())
         );
@@ -57,7 +58,7 @@ export class HomeComponent extends ExbaComponent {
 
   /** Initial render of the full menu grid. */
   private renderGridMenu() {
-    this.updateGrid(MENU_ITEMS);
+    this.updateGrid(EXAMPLE_REGISTRY);
   }
 
   /**
@@ -65,14 +66,14 @@ export class HomeComponent extends ExbaComponent {
    * Organizes items by their respective categories.
    * @param items The list of menu items to display.
    */
-  private updateGrid(items: typeof MENU_ITEMS) {
+  private updateGrid(items: typeof EXAMPLE_REGISTRY) {
     const grid = document.querySelector<HTMLDivElement>('#menu-grid');
     if (!grid) return;
 
-    const itemsSet = new Set(items.map((i) => i.id));
+    const itemsSet = new Set(items.map((i: any) => i.id));
 
-    grid.innerHTML = MENU_CATEGORIES.map((category) => {
-      const categoryItems = category.items.filter((item) =>
+    grid.innerHTML = MENU_CATEGORIES.map((category: any) => {
+      const categoryItems = category.items.filter((item: any) =>
         itemsSet.has(item.id),
       );
       if (categoryItems.length === 0) return '';
@@ -82,7 +83,7 @@ export class HomeComponent extends ExbaComponent {
         <div class="${styles.menuGrid}">
           ${categoryItems
             .map(
-              (item) => `
+              (item: any) => `
             <div class="${styles.menuItem}" onclick="window.dispatchMenuAction('${item.id}')">
               <div class="${styles.menuItemIcon}">${item.icon}</div>
               <div class="${styles.menuItemLabel}">${item.label}</div>
@@ -96,4 +97,4 @@ export class HomeComponent extends ExbaComponent {
   }
 }
 
-customElements.define('exba-home', HomeComponent);
+customElements.define('exba-home', HomeComponent as any);

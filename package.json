@@ -32,6 +32,7 @@
   "main": "dist-electron/main.js",
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "^3.53.0-build1",
+    "@turf/turf": "^7.3.5",
     "clsx": "^2.1.1",
     "cytoscape": "^3.34.0",
     "goober": "^2.1.19",

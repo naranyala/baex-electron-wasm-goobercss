@@ -1,5 +1,5 @@
-import { ExbaComponent, type ComponentProps } from '../../../framework/core/component';
-import { t } from '../../styles';
+import { ExbaComponent, type ComponentProps } from '../../framework/core/component';
+import { t } from '../../app/styles';
 
 /**
  * A terminal emulator UI component.

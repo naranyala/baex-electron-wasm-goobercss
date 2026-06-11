@@ -1,5 +1,5 @@
-import { ExbaComponent } from '../../../framework/core/component';
-import { ease, t } from '../../styles';
+import { ExbaComponent } from '../../framework/core/component';
+import { ease, t } from '../../app/styles';
 
 /**
  * A bottom-sheet drawer component that slides in from the bottom of the screen.

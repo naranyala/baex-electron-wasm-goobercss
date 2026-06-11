@@ -1,5 +1,5 @@
-import { ExbaComponent } from '../../../framework/core/component';
-import { t, ease } from '../../styles';
+import { ExbaComponent } from '../../framework/core/component';
+import { t, ease } from '../../app/styles';
 import cytoscape from 'cytoscape';
 
 const STYLES = `

@@ -1,5 +1,5 @@
-import { ExbaComponent } from '../../../../framework/core/component';
-import { styles as globalStyles } from '../../../styles';
+import { ExbaComponent } from '../../framework/core/component';
+import { styles as globalStyles } from '../../app/styles';
 
 /**
  * A demonstration component for the Clipboard API.

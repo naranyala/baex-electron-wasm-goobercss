@@ -1,7 +1,7 @@
-import { ExbaComponent } from '../../../framework/core/component';
-import { EXBA } from '../../../framework/core/exba';
-import { html } from '../../../framework/core/dom';
-import { t } from '../../styles';
+import { ExbaComponent } from '../../framework/core/component';
+import { EXBA } from '../../framework/core/exba';
+import { html } from '../../framework/core/dom';
+import { t } from '../../app/styles';
 
 const ASCII_LOGO = `
        .---.
