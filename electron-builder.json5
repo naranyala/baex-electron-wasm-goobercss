@@ -10,10 +10,10 @@
   "files": [
     "dist",
     "dist-electron",
-    "native"
+    "src/platform/native"
   ],
   "asarUnpack": [
-    "native/**/*"
+    "src/platform/native/**/*"
   ],
   "mac": {
     "target": [

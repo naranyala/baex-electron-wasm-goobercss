@@ -39,10 +39,10 @@ export default defineConfig(async () => {
     plugins.push(
       electron({
         main: {
-          entry: 'src/desktop/main.ts',
+          entry: 'src/platform/electron/main.ts',
         },
         preload: {
-          input: path.join(__dirname, 'src/desktop/preload.ts'),
+          input: path.join(__dirname, 'src/platform/electron/preload.ts'),
         },
         renderer: process.env.NODE_ENV === 'test' ? undefined : {},
       })

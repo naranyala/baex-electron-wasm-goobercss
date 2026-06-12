@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "VITE_NO_ELECTRON=1 vite",
     "dev:electron": "vite",
-    "build:wasm": "cd src/wasm && wasm-pack build --target web",
+    "build:wasm": "cd src/engine && wasm-pack build --target web",
     "build": "tsc && vite build && electron-builder",
     "build:win": "tsc && vite build && electron-builder --win",
     "run:win": "wine \"release/$npm_package_version/YourAppName-Windows-$npm_package_version-Portable.exe\"",
@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/cytoscape": "^3.21.9",
     "@types/leaflet": "^1.9.21",
+    "@vitest/coverage-v8": "^4.1.8",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
     "jsdom": "^29.1.1",
