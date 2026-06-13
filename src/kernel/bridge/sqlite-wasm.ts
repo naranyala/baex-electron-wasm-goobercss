@@ -24,7 +24,7 @@ export class SQLiteWasmManager {
 
     this.isInitializing = true;
     try {
-      this.sqlite3 = await sqlite3InitModule({
+      this.sqlite3 = await (sqlite3InitModule as any)({
         print: console.log,
         printErr: console.error,
       });

@@ -5,8 +5,8 @@ import { defineExbaComponent } from '../core/component';
 describe('Non-Decorator Reactivity and Components', () => {
   beforeEach(() => {
     // Reset EXBA state if necessary
-    EXBA.subscriptions.clear();
-    EXBA.signalValues.clear();
+    (EXBA as any).subscriptions.clear();
+    (EXBA as any).signalValues.clear();
   });
 
   it('EXBA.reactive should track changes and notify subscribers', () => {

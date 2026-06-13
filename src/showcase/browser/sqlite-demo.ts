@@ -231,7 +231,7 @@ export class SQLiteDemo extends ExbaComponent {
 
   private handleExport() {
     const buffer = SQLiteWasmManager.exportDatabase();
-    const blob = new Blob([buffer], { type: 'application/x-sqlite3' });
+    const blob = new Blob([buffer as any], { type: 'application/x-sqlite3' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

@@ -113,6 +113,8 @@ export const IRBundleSchema = z.object({
   version: z.string(),
   /** Optional array of high-level semantic commands. */
   hlir: z.array(HLIRSchema).nullable(),
+  /** Optional meta-commands for framework-level integration. */
+  meta: z.array(z.any()).optional(),
   /** Mandatory array of low-level rendering instructions. */
   llir: z.array(LLIRSchema),
 });

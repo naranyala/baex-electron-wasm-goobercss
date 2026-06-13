@@ -94,7 +94,7 @@ export function wasmCall() {
         const payload = result === undefined ? args : (Array.isArray(result) ? result : [result]);
         return EXBA.callBridge(propertyKey, ...payload);
       };
-      return descriptor;
+      return descriptor as any;
     } else {
       // Property style decorator
       Object.defineProperty(target, propertyKey, {
@@ -125,7 +125,7 @@ export function wasmCommand(commandName?: string) {
         const payload = result === undefined ? args : (Array.isArray(result) ? result : [result]);
         return EXBA.callBridge(method, ...payload);
       };
-      return descriptor;
+      return descriptor as any;
     } else {
       // Property style decorator
       Object.defineProperty(target, propertyKey, {

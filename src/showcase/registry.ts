@@ -32,6 +32,20 @@ export const EXAMPLE_REGISTRY: ExamplePlugin[] = [
   
   // --- UI Components ---
   {
+    id: 'widget-showcase',
+    label: 'Widget Variants',
+    icon: '🧩',
+    path: '/widget-showcase',
+    component: 'exba-widget-showcase',
+    category: 'ui',
+    action: (c) => {
+        // Dynamic import to avoid bundling everything if not needed (optional but good practice)
+        import('./ui/widget-showcase').then(() => {
+            c.innerHTML = '<exba-widget-showcase></exba-widget-showcase>';
+        });
+    }
+  },
+  {
     id: 'code-block',
     label: 'Code Block',
     icon: '📄',
@@ -85,6 +99,19 @@ pub fn fibonacci(n: i32) -> i32 {
             <exba-code-block-demo title="lib.rs" lang="rust" code="${rsCode.replace(/"/g, '&quot;')}"></exba-code-block-demo>
           </div>
         `;
+    }
+  },
+  {
+    id: 'llm-chat',
+    label: 'Multimodal Chat',
+    icon: '🤖',
+    path: '/llm-chat',
+    component: 'exba-llm-chat',
+    category: 'ui',
+    action: (c) => {
+        import('./ui/llm-chat').then(() => {
+            c.innerHTML = '<exba-llm-chat></exba-llm-chat>';
+        });
     }
   },
   {

@@ -56,7 +56,7 @@ export const AccordionComponent = defineExbaComponent({
   ],
 
   render() {
-    const active = this.state.activeIndex[0]();
+    const active = (this as any).state.activeIndex[0]();
     const items = [
       { title: 'What is EXBA Framework?', content: 'EXBA is a high-performance web framework that bridges TypeScript components with a Rust WASM core for heavy logic and state management.' },
       { title: 'Unified Component Pattern', content: 'Our components follow a strict blueprint: static props, static styles object, and signal-based reactivity for predictable UI updates.' },

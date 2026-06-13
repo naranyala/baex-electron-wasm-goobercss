@@ -12,35 +12,34 @@ const STYLES = `
   .card {
     background: ${t.zinc900a};
     border: 1px solid ${t.zinc800};
-    border-radius: 1.5rem;
-    padding: 2rem;
-    max-width: 440px;
-    width: 100%;
+    border-radius: 0.75rem;
+    padding: 0.75rem 2rem;
+    width: 800px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0.5rem;
     box-sizing: border-box;
   }
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
   .navBtn {
     background: transparent;
     border: 1px solid ${t.zinc800};
     border-radius: 50%;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2rem;
+    height: 2rem;
     display: flex;
     align-items: center;
     justify-content: center;
     color: ${t.zinc200};
     cursor: pointer;
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: bold;
     transition: all ${ease};
   }
@@ -50,7 +49,7 @@ const STYLES = `
     transform: scale(1.05);
   }
   .title {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: ${t.zinc100};
     letter-spacing: -0.01em;
@@ -59,46 +58,47 @@ const STYLES = `
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     text-align: center;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
   .weekday {
-    font-size: 0.8125rem;
+    font-size: 0.875rem;
     font-weight: 700;
     color: ${t.zinc500};
     text-transform: uppercase;
-    padding: 0.25rem 0;
+    padding: 0.125rem 0;
   }
   .grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
+    gap: 0.25rem;
     text-align: center;
   }
   .day {
-    font-size: 0.9375rem;
+    font-size: 1rem;
     font-weight: 500;
-    height: 2.75rem;
+    height: 2.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 0;
     cursor: pointer;
     transition: all ${ease};
     color: ${t.zinc200};
     box-sizing: border-box;
+    border: 1px solid transparent;
   }
   .day.current:hover {
     background: ${t.zinc800};
-    transform: scale(1.08);
+    border-color: ${t.zinc700};
   }
   .day.selected {
-    background: linear-gradient(135deg, ${t.indigo500}, ${t.indigo600});
+    background: ${t.indigo600};
     color: ${t.white};
     font-weight: 700;
-    box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+    border-color: ${t.indigo400};
   }
   .day.selected:hover {
-    transform: scale(1.05);
+    background: ${t.indigo500};
   }
   .day.outside {
     color: ${t.zinc600};
@@ -109,11 +109,12 @@ const STYLES = `
   }
   .footer {
     border-top: 1px solid ${t.zinc800};
-    padding-top: 1.25rem;
-    text-align: center;
+    padding-top: 0.75rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
   }
   .footerLabel {
     font-size: 0.75rem;
@@ -123,7 +124,7 @@ const STYLES = `
     font-weight: 700;
   }
   .footerValue {
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     font-weight: 600;
     color: ${t.indigo300};
   }
@@ -146,13 +147,13 @@ export class DatePickerComponent extends ExbaComponent {
   constructor() {
     super();
     const today = new Date();
-    this.state = {
+    this.setState({
       currentYear: today.getFullYear(),
       currentMonth: today.getMonth(),
       selectedYear: today.getFullYear(),
       selectedMonth: today.getMonth(),
       selectedDay: today.getDate()
-    };
+    });
   }
 
   /**
